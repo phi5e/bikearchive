@@ -63,9 +63,9 @@ ul {
 *,
 *::before,
 *::after {
-  cursor: url("../img/cursor.png") 6 18, auto;
-  cursor: -webkit-image-set(url("../img/cursor.png") 1x, url("../img/cursor@2x.png") 2x) 6 18, auto;
-  cursor: image-set(url("../img/cursor.png") 1x, url("../img/cursor@2x.png") 2x) 6 18, auto;
+  cursor: url("../img/cursor.png") 3 9, auto;
+  cursor: -webkit-image-set(url("../img/cursor.png") 1x, url("../img/cursor@2x.png") 2x) 3 9, auto;
+  cursor: image-set(url("../img/cursor.png") 1x, url("../img/cursor@2x.png") 2x) 3 9, auto;
 }
 
 ::selection {
@@ -122,7 +122,9 @@ ul {
   height: 100svh;
   display: flex;
   justify-content: center;
-  overflow: hidden;
+  /* Only clip sideways (wide posters on phones). Vertically nothing is
+     clipped, so the drifting names can lie over the neighbouring posters. */
+  overflow-x: clip;
   scroll-snap-align: start;
 }
 
@@ -146,7 +148,8 @@ ul {
   left: var(--gutter);
   right: var(--gutter);
   bottom: var(--gutter);
-  z-index: 2;
+  /* Above every poster, not just this section's. */
+  z-index: 5;
   pointer-events: none;
 }
 
