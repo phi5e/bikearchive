@@ -115,8 +115,8 @@
   // Name entrance, played each time a poster comes into view (from
   // either direction):
   // 1. the letters rise from below the screen edge one after another,
-  // 2. meanwhile a wave runs over the word, to the left and back to the
-  //    right: letters under it stretch, the others squeeze, like looking
+  // 2. meanwhile a wave runs once over the word, right to left:
+  //    letters under it stretch, the others squeeze, like looking
   //    through moving glass. The name's left and right edges never move;
   //    only the widths inside redistribute.
   // A horizontal blur follows the wave's speed (motion blur).
@@ -126,7 +126,7 @@
   const RISE = 1.1; // seconds per letter
   const STAGGER = 0.03;
   const WAVE_START = 0.1;
-  const WAVE_LEG = 0.95; // one pass, left or right
+  const WAVE_LEG = 1.0; // the single right-to-left pass
   const riseEase = gsap.parseEase("power4.out");
   const legEase = gsap.parseEase("sine.inOut");
 
@@ -165,18 +165,16 @@
 
     inner.style.filter = "url(#name-blur)";
     const state = { t: 0 };
-    const duration = Math.max(RISE + STAGGER * (chars.length - 1), WAVE_START + 2 * WAVE_LEG);
+    const duration = Math.max(RISE + STAGGER * (chars.length - 1), WAVE_START + WAVE_LEG);
     let lastCentre = null;
 
     function render() {
       const t = state.t;
-      // Wave centre: from right of the word to left of it, then back.
+      // Wave centre: from right of the word to left of it.
       const w = t - WAVE_START;
-      let centre;
-      if (w < WAVE_LEG) centre = 1.15 - 1.3 * legEase(Math.max(w, 0) / WAVE_LEG);
-      else centre = -0.15 + 1.3 * legEase(Math.min((w - WAVE_LEG) / WAVE_LEG, 1));
+      const life = Math.min(Math.max(w / WAVE_LEG, 0), 1);
+      const centre = 1.15 - 1.3 * legEase(life);
       // Strength fades in at the start and out at the end.
-      const life = Math.min(Math.max(w / (2 * WAVE_LEG), 0), 1);
       const amp = 1.7 * Math.sin(Math.PI * life);
 
       // Stretch under the wave, then rescale so the widths still add up
