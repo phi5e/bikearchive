@@ -177,17 +177,17 @@ ul {
   white-space: nowrap;
 }
 
-/* The part main.js squashes and stretches (scaleX from the left edge);
-   the outer .bike__name keeps the parallax transform. */
+/* Holds the letters main.js animates (rise + wave); the outer
+   .bike__name keeps the parallax transform. */
 .bike__name-inner {
   display: inline-block;
-  transform-origin: 0 100%;
-  will-change: transform;
 }
 
+/* Each letter stretches from its own left edge. */
 .bike__char {
   display: inline-block;
   white-space: pre;
+  transform-origin: 0 100%;
   will-change: transform;
 }
 
