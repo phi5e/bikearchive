@@ -24,8 +24,8 @@
     img.src = bike.image;
     img.alt = `Plakat: ${bike.name}`;
     section.querySelector(".bike__year").textContent = bike.year;
-    // One span per letter (for the rise), inside one span that gets
-    // squashed and stretched as a whole.
+    // One span per letter (rise + wave), inside one span that holds
+    // them (the outer span keeps the parallax).
     const name = section.querySelector(".bike__name");
     name.setAttribute("aria-label", bike.name);
     const inner = document.createElement("span");
@@ -51,7 +51,7 @@
 
   // Fit every name to one line: as large as the width allows, never
   // above the CSS cap (160px). Measured on the inner span, whose
-  // offsetWidth ignores the squash/stretch transform.
+  // offsetWidth ignores the letters' wave transforms.
   const names = Array.from(document.querySelectorAll(".bike__name"));
   function fitNames() {
     const cap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--name-max")) || 160;
@@ -112,83 +112,146 @@
     parallax();
   }
 
-  // Name entrance, played each time a poster snaps into view:
+  // Name entrance, played each time a poster comes into view (from
+  // either direction):
   // 1. the letters rise from below the screen edge one after another,
-  // 2. meanwhile the whole word squashes towards the left,
-  // 3. then stretches like rubber across the full screen width,
-  // 4. and springs back into its final shape.
-  // A horizontal blur follows the squash/stretch speed (motion blur).
+  // 2. meanwhile a wave runs over the word, to the left and back to the
+  //    right: letters under it stretch, the others squeeze, like looking
+  //    through moving glass. The name's left and right edges never move;
+  //    only the widths inside redistribute.
+  // A horizontal blur follows the wave's speed (motion blur).
   const blurDev = document.getElementById("name-blur-dev");
   const entrances = new Map();
 
+  const RISE = 1.1; // seconds per letter
+  const STAGGER = 0.03;
+  const WAVE_START = 0.1;
+  const WAVE_LEG = 0.95; // one pass, left or right
+  const riseEase = gsap.parseEase("power4.out");
+  const legEase = gsap.parseEase("sine.inOut");
+
   function hideName(name) {
     const inner = name.firstElementChild;
-    const chars = inner.children;
     const gutter = parseFloat(getComputedStyle(name.parentElement).bottom) || 0;
-    gsap.set(inner, { scaleX: 1, filter: "none" });
-    // Far enough down to start below the bottom edge of the screen.
-    gsap.set(chars, { y: inner.offsetHeight + gutter + 40 });
+    const drop = inner.offsetHeight + gutter + 40;
+    inner.style.visibility = "hidden";
+    inner.style.filter = "none";
+    Array.from(inner.children).forEach((c) => {
+      c.style.transform = `translate3d(0, ${drop}px, 0)`;
+    });
+  }
+
+  function restName(name) {
+    const inner = name.firstElementChild;
+    inner.style.visibility = "";
+    inner.style.filter = "none";
+    Array.from(inner.children).forEach((c) => { c.style.transform = ""; });
   }
 
   function playName(name) {
     const inner = name.firstElementChild;
-    const chars = inner.children;
-    const natural = inner.offsetWidth || 1;
-    const left = inner.getBoundingClientRect().left;
-    // Rubber stretch reaches the right screen edge (at least +4%).
-    const stretch = Math.max((window.innerWidth - left) / natural, 1.04);
-
+    const chars = Array.from(inner.children);
     entrances.get(name)?.kill();
-    hideName(name);
-    inner.style.filter = "url(#name-blur)";
+    restName(name);
 
-    let lastScale = 1;
-    const tl = gsap.timeline({
-      onUpdate() {
-        const s = gsap.getProperty(inner, "scaleX");
-        const speed = Math.abs(s - lastScale);
-        lastScale = s;
-        // Blur is applied before scaling, so divide it back out.
-        const blur = Math.min(speed * 260, 28) / Math.max(s, 0.2);
-        blurDev.setAttribute("stdDeviation", `${blur.toFixed(2)} 0`);
-      },
+    // Resting geometry: each letter's width and centre (0..1 of the name).
+    const widths = chars.map((c) => c.offsetWidth);
+    const total = widths.reduce((a, b) => a + b, 0) || 1;
+    let acc = 0;
+    const centres = widths.map((w) => { const m = (acc + w / 2) / total; acc += w; return m; });
+    const gutter = parseFloat(getComputedStyle(name.parentElement).bottom) || 0;
+    const drop = inner.offsetHeight + gutter + 40;
+    const sigma = Math.max(0.09, 1.2 / chars.length);
+
+    inner.style.filter = "url(#name-blur)";
+    const state = { t: 0 };
+    const duration = Math.max(RISE + STAGGER * (chars.length - 1), WAVE_START + 2 * WAVE_LEG);
+    let lastCentre = null;
+
+    function render() {
+      const t = state.t;
+      // Wave centre: from right of the word to left of it, then back.
+      const w = t - WAVE_START;
+      let centre;
+      if (w < WAVE_LEG) centre = 1.15 - 1.3 * legEase(Math.max(w, 0) / WAVE_LEG);
+      else centre = -0.15 + 1.3 * legEase(Math.min((w - WAVE_LEG) / WAVE_LEG, 1));
+      // Strength fades in at the start and out at the end.
+      const life = Math.min(Math.max(w / (2 * WAVE_LEG), 0), 1);
+      const amp = 1.7 * Math.sin(Math.PI * life);
+
+      // Stretch under the wave, then rescale so the widths still add up
+      // to the resting width: the letters elsewhere get squeezed.
+      const raw = centres.map((m) => 1 + amp * Math.exp(-((m - centre) ** 2) / (2 * sigma * sigma)));
+      const sum = raw.reduce((a, r, i) => a + r * widths[i], 0);
+      const k = total / sum;
+
+      let x = 0;
+      let offset = 0;
+      chars.forEach((c, i) => {
+        const sx = raw[i] * k;
+        const p = Math.min(Math.max((t - i * STAGGER) / RISE, 0), 1);
+        const y = drop * (1 - riseEase(p));
+        c.style.transform = `translate3d(${(x - offset).toFixed(2)}px, ${y.toFixed(2)}px, 0) scaleX(${sx.toFixed(4)})`;
+        x += widths[i] * sx;
+        offset += widths[i];
+      });
+
+      const speed = lastCentre === null ? 0 : Math.abs(centre - lastCentre);
+      lastCentre = centre;
+      const blur = Math.min(speed * amp * 220, 10);
+      blurDev.setAttribute("stdDeviation", `${blur.toFixed(2)} 0`);
+    }
+
+    const tween = gsap.to(state, {
+      t: duration,
+      duration,
+      ease: "none",
+      onUpdate: render,
       onComplete() {
-        inner.style.filter = "none";
+        restName(name);
         blurDev.setAttribute("stdDeviation", "0 0");
       },
     });
-    tl.to(chars, { y: 0, duration: 1.0, ease: "expo.out", stagger: 0.045 }, 0)
-      .to(inner, { scaleX: 0.32, duration: 0.55, ease: "power3.out" }, 0.12)
-      .to(inner, { scaleX: stretch, duration: 0.5, ease: "power3.inOut" }, 0.62)
-      .to(inner, { scaleX: 1, duration: 1.3, ease: "elastic.out(1.1, 0.32)" }, 1.12);
-    entrances.set(name, tl);
+    render();
+    entrances.set(name, tween);
   }
 
   if (window.gsap && !reduceMotion) {
     names.forEach(hideName);
-    const nameObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const name = entry.target.querySelector(".bike__name");
-          if (entry.intersectionRatio >= 0.55) {
-            if (!entrances.has(name)) playName(name);
-          } else if (!entry.isIntersecting) {
-            // Fully off screen: reset, so it plays again next time.
-            entrances.get(name)?.kill();
-            entrances.delete(name);
-            hideName(name);
-          }
-        });
-      },
-      { threshold: [0, 0.55] }
-    );
+    const nameSections = sections.map((s) => ({ section: s, name: s.querySelector(".bike__name") }));
+    // Checked on every scroll frame (an IntersectionObserver misses a
+    // poster that ends exactly at the screen edge, which scroll snap
+    // makes the normal case).
+    function checkNames() {
+      const vh = window.innerHeight;
+      nameSections.forEach(({ section, name }) => {
+        const r = section.getBoundingClientRect();
+        const visible = Math.min(r.bottom, vh) - Math.max(r.top, 0);
+        if (visible >= vh * 0.55) {
+          if (!entrances.has(name)) playName(name);
+        } else if (visible <= 1 && entrances.has(name)) {
+          // Off screen: reset, so it plays from scratch next time.
+          entrances.get(name).kill();
+          entrances.delete(name);
+          hideName(name);
+        }
+      });
+    }
+    let nameTick = false;
+    window.addEventListener("scroll", () => {
+      if (!nameTick) {
+        nameTick = true;
+        requestAnimationFrame(() => { nameTick = false; checkNames(); });
+      }
+    }, { passive: true });
     document.fonts.ready.then(() => {
       layout();
-      sections.forEach((s) => nameObserver.observe(s));
+      names.forEach((n) => { if (!entrances.has(n)) hideName(n); });
+      checkNames();
     });
     window.addEventListener("resize", () => {
-      // Keep resting names in place; hidden ones need the new offset.
       names.forEach((n) => { if (!entrances.has(n)) hideName(n); });
+      checkNames();
     });
   }
 
