@@ -24,7 +24,20 @@
     img.src = bike.image;
     img.alt = `Plakat: ${bike.name}`;
     section.querySelector(".bike__year").textContent = bike.year;
-    section.querySelector(".bike__name").textContent = bike.name;
+    // One span per letter (for the rise), inside one span that gets
+    // squashed and stretched as a whole.
+    const name = section.querySelector(".bike__name");
+    name.setAttribute("aria-label", bike.name);
+    const inner = document.createElement("span");
+    inner.className = "bike__name-inner";
+    inner.setAttribute("aria-hidden", "true");
+    Array.from(bike.name).forEach((ch) => {
+      const c = document.createElement("span");
+      c.className = "bike__char";
+      c.textContent = ch;
+      inner.appendChild(c);
+    });
+    name.appendChild(inner);
     archive.appendChild(section);
 
     const li = document.createElement("li");
@@ -37,14 +50,15 @@
   });
 
   // Fit every name to one line: as large as the width allows, never
-  // above the CSS cap (120px).
+  // above the CSS cap (160px). Measured on the inner span, whose
+  // offsetWidth ignores the squash/stretch transform.
   const names = Array.from(document.querySelectorAll(".bike__name"));
   function fitNames() {
-    const cap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--name-max")) || 120;
+    const cap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--name-max")) || 160;
     names.forEach((el) => {
       el.style.fontSize = `${cap}px`;
       const available = el.parentElement.clientWidth;
-      const needed = el.scrollWidth;
+      const needed = el.firstElementChild.offsetWidth;
       const size = needed > available ? cap * (available / needed) : cap;
       el.style.fontSize = `${Math.floor(size * 100) / 100}px`;
     });
@@ -96,6 +110,86 @@
     }, { passive: true });
     window.addEventListener("resize", parallax);
     parallax();
+  }
+
+  // Name entrance, played each time a poster snaps into view:
+  // 1. the letters rise from below the screen edge one after another,
+  // 2. meanwhile the whole word squashes towards the left,
+  // 3. then stretches like rubber across the full screen width,
+  // 4. and springs back into its final shape.
+  // A horizontal blur follows the squash/stretch speed (motion blur).
+  const blurDev = document.getElementById("name-blur-dev");
+  const entrances = new Map();
+
+  function hideName(name) {
+    const inner = name.firstElementChild;
+    const chars = inner.children;
+    const gutter = parseFloat(getComputedStyle(name.parentElement).bottom) || 0;
+    gsap.set(inner, { scaleX: 1, filter: "none" });
+    // Far enough down to start below the bottom edge of the screen.
+    gsap.set(chars, { y: inner.offsetHeight + gutter + 40 });
+  }
+
+  function playName(name) {
+    const inner = name.firstElementChild;
+    const chars = inner.children;
+    const natural = inner.offsetWidth || 1;
+    const left = inner.getBoundingClientRect().left;
+    // Rubber stretch reaches the right screen edge (at least +4%).
+    const stretch = Math.max((window.innerWidth - left) / natural, 1.04);
+
+    entrances.get(name)?.kill();
+    hideName(name);
+    inner.style.filter = "url(#name-blur)";
+
+    let lastScale = 1;
+    const tl = gsap.timeline({
+      onUpdate() {
+        const s = gsap.getProperty(inner, "scaleX");
+        const speed = Math.abs(s - lastScale);
+        lastScale = s;
+        // Blur is applied before scaling, so divide it back out.
+        const blur = Math.min(speed * 260, 28) / Math.max(s, 0.2);
+        blurDev.setAttribute("stdDeviation", `${blur.toFixed(2)} 0`);
+      },
+      onComplete() {
+        inner.style.filter = "none";
+        blurDev.setAttribute("stdDeviation", "0 0");
+      },
+    });
+    tl.to(chars, { y: 0, duration: 1.0, ease: "expo.out", stagger: 0.045 }, 0)
+      .to(inner, { scaleX: 0.32, duration: 0.55, ease: "power3.out" }, 0.12)
+      .to(inner, { scaleX: stretch, duration: 0.5, ease: "power3.inOut" }, 0.62)
+      .to(inner, { scaleX: 1, duration: 1.3, ease: "elastic.out(1.1, 0.32)" }, 1.12);
+    entrances.set(name, tl);
+  }
+
+  if (window.gsap && !reduceMotion) {
+    names.forEach(hideName);
+    const nameObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const name = entry.target.querySelector(".bike__name");
+          if (entry.intersectionRatio >= 0.55) {
+            if (!entrances.has(name)) playName(name);
+          } else if (!entry.isIntersecting) {
+            // Fully off screen: reset, so it plays again next time.
+            entrances.get(name)?.kill();
+            entrances.delete(name);
+            hideName(name);
+          }
+        });
+      },
+      { threshold: [0, 0.55] }
+    );
+    document.fonts.ready.then(() => {
+      layout();
+      sections.forEach((s) => nameObserver.observe(s));
+    });
+    window.addEventListener("resize", () => {
+      // Keep resting names in place; hidden ones need the new offset.
+      names.forEach((n) => { if (!entrances.has(n)) hideName(n); });
+    });
   }
 
   // "bike archive" keeps switching typefaces.

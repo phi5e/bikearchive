@@ -6,7 +6,7 @@
   <title>astalla bici – bike archive</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter+Tight:wght@400&family=Sora:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@125,900&family=Instrument+Serif&family=Inter+Tight:wght@400&family=Sora:wght@400;500;600&display=swap" rel="stylesheet" />
   <!-- Faces for the cycling "bike archive" title, subset to just those letters. -->
   <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@1,700&family=Space+Mono&family=Syne:wght@800&family=Unbounded:wght@600&family=Fraunces:ital,wght@1,300&family=Pixelify+Sans&family=Rubik+Mono+One&family=Major+Mono+Display&text=bike%20archive&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
@@ -28,6 +28,14 @@
 
   <main class="archive" id="archive"></main>
 
+  <!-- Horizontal-only blur for the names while they squash and stretch. -->
+  <svg class="fx" aria-hidden="true" focusable="false">
+    <filter id="name-blur" x="-20%" y="-50%" width="140%" height="200%">
+      <feGaussianBlur id="name-blur-dev" stdDeviation="0 0" />
+    </filter>
+  </svg>
+
+  <script src="js/vendor/gsap.min.js"></script>
   <script src="js/bikes.js"></script>
   <script src="js/main.js"></script>
 </body>
