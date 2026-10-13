@@ -20,7 +20,7 @@
   --gutter: clamp(18px, 3vw, 32px);
 
   --name-max: 160px;
-  --year-size: 9px;
+  --year-size: 13.5px;
   --toggle-size: 9px;
   --list-size: 18px;
 
@@ -180,19 +180,25 @@ ul {
   white-space: nowrap;
 }
 
-/* Holds the letters main.js animates (swipe-in + wave); the outer
-   .bike__name keeps the parallax transform. Its bottom edge masks the
-   letters while they swipe up into place. */
+/* Holds the letters main.js animates; the outer .bike__name keeps the
+   parallax transform. */
 .bike__name-inner {
   display: inline-block;
-  clip-path: inset(-50% -50% 0 -50%);
 }
 
-/* Each letter stretches from its own left edge. */
+/* One slot per letter: stretched by the wave from its own left edge,
+   and clipped left and right so the glyph inside slides in as if from
+   behind a curtain. */
 .bike__char {
   display: inline-block;
   white-space: pre;
   transform-origin: 0 100%;
+  clip-path: inset(-50% 0 -50% 0);
+  will-change: transform;
+}
+
+.bike__glyph {
+  display: inline-block;
   will-change: transform;
 }
 

@@ -24,7 +24,7 @@
     img.src = bike.image;
     img.alt = `Plakat: ${bike.name}`;
     section.querySelector(".bike__year").textContent = bike.year;
-    // One span per letter (swipe-in + wave), inside one span that holds
+    // One masked cell per letter (wave) holding the glyph (slide-in), inside one span that holds
     // them (the outer span keeps the parallax).
     const name = section.querySelector(".bike__name");
     name.setAttribute("aria-label", bike.name);
@@ -34,7 +34,10 @@
     Array.from(bike.name).forEach((ch) => {
       const c = document.createElement("span");
       c.className = "bike__char";
-      c.textContent = ch;
+      const g = document.createElement("span");
+      g.className = "bike__glyph";
+      g.textContent = ch;
+      c.appendChild(g);
       inner.appendChild(c);
     });
     name.appendChild(inner);
@@ -113,29 +116,34 @@
   }
 
   // Name entrance, played each time a poster comes into view (from
-  // either direction): a wave runs once over the word, right to left.
-  // Letters under it stretch and the others squeeze, like looking
-  // through moving glass; the name's left and right edges never move,
-  // only the widths inside redistribute. Each letter swipes up into its
-  // own masked line just as the wave reaches it, so the swipe-ins ride
-  // the wave instead of running as a separate step.
-  // A horizontal blur follows the wave's speed (motion blur).
+  // either direction). Everything moves on the x axis only.
+  // 1. Slide-in: each letter slides in from the right into its own slot,
+  //    as if from behind an invisible curtain, one after another from
+  //    the last letter to the first.
+  // 2. Wave: with the left edge of the first letter and the right edge
+  //    of the last letter fixed, a wave runs over the word to the left
+  //    and back to the right. Letters under it stretch and the others
+  //    squeeze, like looking through moving glass.
+  // A horizontal blur follows the movement (motion blur).
   const blurDev = document.getElementById("name-blur-dev");
   const entrances = new Map();
 
-  const WAVE = 1.1; // seconds for the wave to cross the name
-  const SWIPE = 0.75; // seconds per letter swipe-in
-  const LEAD = 0.18; // a letter starts this far (0..1) ahead of the wave
-  const swipeEase = gsap.parseEase("power3.out");
+  const SLIDE = 0.6; // seconds per letter slide-in
+  const STAGGER = 0.045;
+  const WAVE_OVERLAP = 0.15; // wave starts this long before the last letter lands
+  const WAVE_LEG = 0.6; // seconds per pass (left, then back right)
+  const LEAD = 0.18; // wave starts/ends this far (0..1) outside the word
+  const slideEase = gsap.parseEase("power3.out");
   // Nearly linear travel, only a touch of easing at both ends.
-  const waveEase = (p) => 0.85 * p + 0.15 * (0.5 - 0.5 * Math.cos(Math.PI * p));
+  const legEase = (p) => 0.85 * p + 0.15 * (0.5 - 0.5 * Math.cos(Math.PI * p));
 
   function hideName(name) {
     const inner = name.firstElementChild;
     inner.style.visibility = "hidden";
     inner.style.filter = "none";
     Array.from(inner.children).forEach((c) => {
-      c.style.transform = `translate3d(0, ${(c.offsetHeight * 1.15).toFixed(2)}px, 0)`;
+      c.style.transform = "";
+      c.firstElementChild.style.transform = "translate3d(110%, 0, 0)";
     });
   }
 
@@ -143,12 +151,16 @@
     const inner = name.firstElementChild;
     inner.style.visibility = "";
     inner.style.filter = "none";
-    Array.from(inner.children).forEach((c) => { c.style.transform = ""; });
+    Array.from(inner.children).forEach((c) => {
+      c.style.transform = "";
+      c.firstElementChild.style.transform = "";
+    });
   }
 
   function playName(name) {
     const inner = name.firstElementChild;
     const chars = Array.from(inner.children);
+    const glyphs = chars.map((c) => c.firstElementChild);
     entrances.get(name)?.kill();
     restName(name);
 
@@ -157,25 +169,39 @@
     const total = widths.reduce((a, b) => a + b, 0) || 1;
     let acc = 0;
     const centres = widths.map((w) => { const m = (acc + w / 2) / total; acc += w; return m; });
-    const drop = (chars[0]?.offsetHeight || 0) * 1.15;
     const sigma = Math.max(0.09, 1.2 / chars.length);
-
-    // The wave centre travels from 1 + LEAD (right of the word) to
-    // -LEAD (left of it). A letter starts swiping in when the centre
-    // is LEAD ahead of it.
+    const n = chars.length;
+    // Last letter first.
+    const starts = chars.map((_, i) => (n - 1 - i) * STAGGER);
+    const slideEnd = (n - 1) * STAGGER + SLIDE;
+    const waveStart = Math.max(slideEnd - WAVE_OVERLAP, 0);
     const span = 1 + 2 * LEAD;
-    const starts = centres.map((m) => WAVE * (1 - m) / span);
 
     inner.style.filter = "url(#name-blur)";
     const state = { t: 0 };
-    const duration = Math.max(WAVE, Math.max(...starts) + SWIPE);
+    const duration = waveStart + 2 * WAVE_LEG;
     let lastCentre = null;
+    let lastSlide = null;
 
     function render() {
       const t = state.t;
-      const life = Math.min(Math.max(t / WAVE, 0), 1);
-      const centre = 1 + LEAD - span * waveEase(life);
-      // Strength swells in and dies out smoothly (zero slope at both ends).
+
+      // 1. Slide-in, per letter, inside its own masked slot.
+      let slideSum = 0;
+      glyphs.forEach((g, i) => {
+        const p = Math.min(Math.max((t - starts[i]) / SLIDE, 0), 1);
+        const x = 110 * (1 - slideEase(p));
+        slideSum += x * widths[i];
+        g.style.transform = x > 0.01 ? `translate3d(${x.toFixed(2)}%, 0, 0)` : "";
+      });
+
+      // 2. Wave: centre goes right -> left -> right, strength swells in
+      //    and dies out smoothly (zero slope at both ends).
+      const w = Math.min(Math.max(t - waveStart, 0), 2 * WAVE_LEG);
+      const life = w / (2 * WAVE_LEG);
+      const centre = w < WAVE_LEG
+        ? 1 + LEAD - span * legEase(w / WAVE_LEG)
+        : -LEAD + span * legEase((w - WAVE_LEG) / WAVE_LEG);
       const amp = 1.6 * Math.sin(Math.PI * life) ** 2;
 
       // Stretch under the wave, then rescale so the widths still add up
@@ -183,21 +209,23 @@
       const raw = centres.map((m) => 1 + amp * Math.exp(-((m - centre) ** 2) / (2 * sigma * sigma)));
       const sum = raw.reduce((a, r, i) => a + r * widths[i], 0);
       const k = total / sum;
-
       let x = 0;
       let offset = 0;
       chars.forEach((c, i) => {
         const sx = raw[i] * k;
-        const p = Math.min(Math.max((t - starts[i]) / SWIPE, 0), 1);
-        const y = drop * (1 - swipeEase(p));
-        c.style.transform = `translate3d(${(x - offset).toFixed(2)}px, ${y.toFixed(2)}px, 0) scaleX(${sx.toFixed(4)})`;
+        c.style.transform = amp > 0.001
+          ? `translate3d(${(x - offset).toFixed(2)}px, 0, 0) scaleX(${sx.toFixed(4)})`
+          : "";
         x += widths[i] * sx;
         offset += widths[i];
       });
 
-      const speed = lastCentre === null ? 0 : Math.abs(centre - lastCentre);
+      // Motion blur from both movements.
+      const waveSpeed = lastCentre === null ? 0 : Math.abs(centre - lastCentre) * amp * 220;
+      const slideSpeed = lastSlide === null ? 0 : Math.abs(slideSum - lastSlide) / total * 1.2;
       lastCentre = centre;
-      const blur = Math.min(speed * amp * 220, 10);
+      lastSlide = slideSum;
+      const blur = Math.min(Math.max(waveSpeed, slideSpeed), 10);
       blurDev.setAttribute("stdDeviation", `${blur.toFixed(2)} 0`);
     }
 
