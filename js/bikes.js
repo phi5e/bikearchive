@@ -3,7 +3,7 @@
    year  — the small header above it
    image — the poster, shown 100vh tall */
 window.BIKES = [
-  { name: "Colnago Master Olympic", year: "1989", image: "posters/01.svg" },
+  { name: "GT", year: "1989", image: "posters/01.jpg" },
   { name: "De Rosa Professional", year: "1978", image: "posters/02.svg" },
   { name: "Pinarello Montello", year: "1986", image: "posters/03.svg" },
   { name: "Cinelli Supercorsa", year: "1974", image: "posters/04.svg" },

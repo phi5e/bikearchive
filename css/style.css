@@ -58,6 +58,16 @@ ul {
   list-style: none;
 }
 
+/* Custom cursor everywhere (hotspot on the index fingertip), including
+   links and buttons, which would otherwise switch to the system hand. */
+*,
+*::before,
+*::after {
+  cursor: url("../img/cursor.png") 6 18, auto;
+  cursor: -webkit-image-set(url("../img/cursor.png") 1x, url("../img/cursor@2x.png") 2x) 6 18, auto;
+  cursor: image-set(url("../img/cursor.png") 1x, url("../img/cursor@2x.png") 2x) 6 18, auto;
+}
+
 ::selection {
   background: var(--ink);
   color: var(--bg);
@@ -184,7 +194,6 @@ ul {
   line-height: 1.3;
   white-space: nowrap;
   text-align: left;
-  cursor: pointer;
   transform: translate(0, -50%);
   transition: transform var(--slide), opacity 0.25s var(--ease-out);
 }
