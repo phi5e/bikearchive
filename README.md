@@ -4,7 +4,7 @@ Eine Seite, ein Plakat pro Bildschirm (100vh). Unten links steht der
 Rahmenname (immer einzeilig, skaliert mit der Breite,
 max. 160px, Archivo Expanded Black), darüber das Jahr (18px). Beim
 Scrollen (in beide Richtungen) kommen die Buchstaben einzeln von unten
-herein, während eine Welle einmal nach links und zurück nach rechts über
+herein, während eine Welle einmal von rechts nach links über
 den Namen läuft und einzelne Buchstaben dehnt und staucht; die
 Außenkanten bleiben fest (GSAP, `js/vendor/`). Links mittig öffnet „view list“
 die Liste aller Räder.
