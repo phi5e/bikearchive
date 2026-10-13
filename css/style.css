@@ -205,6 +205,34 @@ ul {
   will-change: transform;
 }
 
+/* Morph variant (MORPH_FROM_SERIF in main.js): the sans and the serif
+   letter sit on one baseline; the serif adds no width. */
+.bike__glyph--morph {
+  display: inline-grid;
+  align-items: baseline;
+  justify-items: start;
+}
+
+.bike__sans,
+.bike__serif-wrap {
+  grid-area: 1 / 1;
+}
+
+.bike__serif-wrap {
+  width: 0;
+}
+
+.bike__serif {
+  display: inline-block;
+  font-family: "Instrument Serif", Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  font-stretch: normal;
+  font-variation-settings: normal;
+  letter-spacing: 0;
+  transform-origin: 0 100%;
+  opacity: 0;
+}
+
 .fx {
   position: absolute;
   width: 0;
