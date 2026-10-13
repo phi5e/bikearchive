@@ -66,8 +66,9 @@
       el.style.fontSize = `${Math.floor(size * 100) / 100}px`;
     });
   }
-  // The list sits right of the toggle (as wide as "close list") and
-  // ends where the tallest caption (year + big name) begins.
+  // The list sits right of the toggle (as wide as "close list"),
+  // centred on the toggle's line: it reaches as far up as down, limited
+  // by the menu above and the tallest caption (year + big name) below.
   const root = document.documentElement;
   function layout() {
     fitNames();
@@ -75,7 +76,10 @@
     const captions = Array.from(document.querySelectorAll(".bike__caption"));
     const tallest = Math.max(0, ...captions.map((c) => c.offsetHeight));
     const gutter = captions[0] ? parseFloat(getComputedStyle(captions[0]).bottom) : 0;
-    root.style.setProperty("--list-bottom", `${Math.ceil(tallest + gutter + 16)}px`);
+    const listBottom = Math.ceil(tallest + gutter + 16);
+    const topbarH = parseFloat(getComputedStyle(root).getPropertyValue("--topbar-h")) || 56;
+    const half = Math.max(80, Math.min(innerHeight / 2 - topbarH - 16, innerHeight / 2 - listBottom));
+    root.style.setProperty("--list-half", `${Math.floor(half)}px`);
   }
   layout();
   document.fonts.ready.then(layout);
@@ -129,12 +133,14 @@
   const blurDev = document.getElementById("name-blur-dev");
   const entrances = new Map();
 
-  const SLIDE = 0.6; // seconds per letter slide-in
+  const SLIDE = 0.75; // seconds per letter slide-in
   const STAGGER = 0.045;
   const LEAD = 0.18; // wave starts/ends this far (0..1) outside the word
-  const slideEase = gsap.parseEase("power3.out");
-  // Nearly linear travel, only a touch of easing at both ends.
-  const legEase = (p) => 0.85 * p + 0.15 * (0.5 - 0.5 * Math.cos(Math.PI * p));
+  // Long, soft landing: most of the travel early, the last pixels
+  // creep in over the final frames.
+  const slideEase = gsap.parseEase("expo.out");
+  // Linear through the middle, eased out hard over the last stretch.
+  const legEase = (p) => 0.7 * p + 0.3 * (1 - (1 - p) ** 4);
 
   function hideName(name) {
     const inner = name.firstElementChild;
@@ -199,7 +205,8 @@
       //    out smoothly (zero slope at both ends).
       const life = Math.min(Math.max(t / wave, 0), 1);
       const centre = 1 + LEAD - span * legEase(life);
-      const amp = 1.6 * Math.sin(Math.PI * life) ** 2;
+      // The tail is stretched (life ** 0.8) so the wave dies out slowly.
+      const amp = 1.6 * Math.sin(Math.PI * life ** 0.8) ** 2;
 
       // Stretch under the wave, then rescale so the widths still add up
       // to the resting width: the letters elsewhere get squeezed.
@@ -279,41 +286,14 @@
     });
   }
 
-  // "bike archive" keeps switching typefaces.
-  const title = document.getElementById("topbar-title");
-  const faces = [
-    { family: "Instrument Serif", weight: 400, style: "normal" },
-    { family: "Bodoni Moda", weight: 700, style: "italic" },
-    { family: "Space Mono", weight: 400, style: "normal" },
-    { family: "Syne", weight: 800, style: "normal" },
-    { family: "Unbounded", weight: 600, style: "normal" },
-    { family: "Fraunces", weight: 300, style: "italic" },
-    { family: "Pixelify Sans", weight: 400, style: "normal" },
-    { family: "Rubik Mono One", weight: 400, style: "normal" },
-    { family: "Major Mono Display", weight: 400, style: "normal" },
-    { family: "Inter Tight", weight: 400, style: "normal" },
-  ];
-  function setFace(f) {
-    title.style.fontFamily = `"${f.family}", var(--font-sans)`;
-    title.style.fontWeight = f.weight;
-    title.style.fontStyle = f.style;
-  }
-  setFace(faces[0]);
-  if (!reduceMotion) {
-    // Only start once every face is in, so it never flashes a fallback.
-    Promise.all(faces.map((f) => document.fonts.load(`${f.style} ${f.weight} 16px "${f.family}"`, "bike archive")))
-      .catch(() => {})
-      .then(() => {
-        let i = 0;
-        setInterval(() => {
-          i = (i + 1) % faces.length;
-          setFace(faces[i]);
-        }, 320);
-      });
-  }
-
-  // view list ↔ close list
+  // view list ↔ close list. On opening, the current bike's name is
+  // scrolled onto the toggle's line, with the others above and below.
+  const listNav = document.getElementById("bike-list");
   function setOpen(open) {
+    if (open) {
+      const li = listItems.querySelector(".is-current") || listItems.children[Math.floor(listItems.children.length / 2)];
+      if (li) listNav.scrollTop = li.offsetTop + li.offsetHeight / 2 - listNav.clientHeight / 2;
+    }
     document.body.classList.toggle("is-list-open", open);
     toggle.setAttribute("aria-expanded", String(open));
     openWord.setAttribute("aria-hidden", String(open));
