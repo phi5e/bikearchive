@@ -2,7 +2,7 @@
    astalla bici – bike archive
    Same look as the portfolio: warm paper background, pure black
    ink, hairline rules, Sora for the topbar. The frame names are
-   set in Instrument Serif; year, list and toggle in Inter Tight.
+   set in Archivo Expanded Black; year, list and toggle in Inter Tight.
    ============================================================ */
 
 :root {
@@ -13,13 +13,13 @@
   --fg-muted: #6b6b66;
 
   --font: "Sora", sans-serif;
-  --font-display: "Instrument Serif", Georgia, "Times New Roman", serif;
+  --font-display: "Archivo", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-sans: "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif;
 
   --topbar-h: 56px;
   --gutter: clamp(18px, 3vw, 32px);
 
-  --name-max: 120px;
+  --name-max: 160px;
   --year-size: 9px;
   --toggle-size: 9px;
   --list-size: 18px;
@@ -167,11 +167,35 @@ ul {
 .bike__name {
   display: block;
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 900;
+  font-stretch: 125%;
+  font-variation-settings: "wdth" 125, "wght" 900;
   font-size: var(--name-max);
   line-height: 0.9;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
   white-space: nowrap;
+}
+
+/* The part main.js squashes and stretches (scaleX from the left edge);
+   the outer .bike__name keeps the parallax transform. */
+.bike__name-inner {
+  display: inline-block;
+  transform-origin: 0 100%;
+  will-change: transform;
+}
+
+.bike__char {
+  display: inline-block;
+  white-space: pre;
+  will-change: transform;
+}
+
+.fx {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
 }
 
 /* ---------------------------------------------

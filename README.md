@@ -2,7 +2,10 @@
 
 Eine Seite, ein Plakat pro Bildschirm (100vh). Unten links steht der
 Rahmenname (immer einzeilig, skaliert mit der Breite,
-max. 120px, Instrument Serif), darüber das Jahr (18px). Links mittig öffnet „view list“
+max. 160px, Archivo Expanded Black). Beim Scrollen fliegt der Name
+Buchstabe für Buchstabe von unten herein, staucht sich nach links, dehnt
+sich gummiartig über die volle Breite und springt dann zurück (GSAP,
+`js/vendor/`), darüber das Jahr (18px). Links mittig öffnet „view list“
 die Liste aller Räder.
 
 Plain HTML/CSS/JS, kein Build. `index.html` einfach öffnen oder hosten.
