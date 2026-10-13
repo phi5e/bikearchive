@@ -6,8 +6,8 @@ Rahmenname (immer einzeilig, skaliert mit der Breite,
 max. 160px, Archivo Expanded Black), darüber das Jahr (13.5px). Beim
 Scrollen (in beide Richtungen) gleitet jeder Buchstabe einzeln von rechts
 in seinen Platz, wie hinter einem unsichtbaren Vorhang hervor (vom letzten
-zum ersten). Danach läuft eine Welle einmal nach links und zurück über
-den Namen und dehnt und staucht einzelne Buchstaben; die Außenkanten
+zum ersten). Gleichzeitig läuft eine Welle einmal von rechts nach links
+über den Namen und dehnt und staucht einzelne Buchstaben; die Außenkanten
 bleiben dabei fest (GSAP, `js/vendor/`). Links mittig öffnet „view list“
 die Liste aller Räder.
 

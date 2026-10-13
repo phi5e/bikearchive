@@ -117,21 +117,20 @@
 
   // Name entrance, played each time a poster comes into view (from
   // either direction). Everything moves on the x axis only.
-  // 1. Slide-in: each letter slides in from the right into its own slot,
-  //    as if from behind an invisible curtain, one after another from
-  //    the last letter to the first.
-  // 2. Wave: with the left edge of the first letter and the right edge
-  //    of the last letter fixed, a wave runs over the word to the left
-  //    and back to the right. Letters under it stretch and the others
-  //    squeeze, like looking through moving glass.
+  // Two motions at once:
+  // - Slide-in: each letter slides in from the right into its own slot,
+  //   as if from behind an invisible curtain, one after another from
+  //   the last letter to the first.
+  // - Wave: with the left edge of the first letter and the right edge
+  //   of the last letter fixed, a wave runs once over the word from
+  //   right to left, following the curtain. Letters under it stretch
+  //   and the others squeeze, like looking through moving glass.
   // A horizontal blur follows the movement (motion blur).
   const blurDev = document.getElementById("name-blur-dev");
   const entrances = new Map();
 
   const SLIDE = 0.6; // seconds per letter slide-in
   const STAGGER = 0.045;
-  const WAVE_OVERLAP = 0.15; // wave starts this long before the last letter lands
-  const WAVE_LEG = 0.6; // seconds per pass (left, then back right)
   const LEAD = 0.18; // wave starts/ends this far (0..1) outside the word
   const slideEase = gsap.parseEase("power3.out");
   // Nearly linear travel, only a touch of easing at both ends.
@@ -174,12 +173,13 @@
     // Last letter first.
     const starts = chars.map((_, i) => (n - 1 - i) * STAGGER);
     const slideEnd = (n - 1) * STAGGER + SLIDE;
-    const waveStart = Math.max(slideEnd - WAVE_OVERLAP, 0);
+    // The wave crosses the word in the time all letters take to land.
+    const wave = Math.max(slideEnd, 0.6);
     const span = 1 + 2 * LEAD;
 
     inner.style.filter = "url(#name-blur)";
     const state = { t: 0 };
-    const duration = waveStart + 2 * WAVE_LEG;
+    const duration = wave;
     let lastCentre = null;
     let lastSlide = null;
 
@@ -195,13 +195,10 @@
         g.style.transform = x > 0.01 ? `translate3d(${x.toFixed(2)}%, 0, 0)` : "";
       });
 
-      // 2. Wave: centre goes right -> left -> right, strength swells in
-      //    and dies out smoothly (zero slope at both ends).
-      const w = Math.min(Math.max(t - waveStart, 0), 2 * WAVE_LEG);
-      const life = w / (2 * WAVE_LEG);
-      const centre = w < WAVE_LEG
-        ? 1 + LEAD - span * legEase(w / WAVE_LEG)
-        : -LEAD + span * legEase((w - WAVE_LEG) / WAVE_LEG);
+      // 2. Wave: centre goes right -> left, strength swells in and dies
+      //    out smoothly (zero slope at both ends).
+      const life = Math.min(Math.max(t / wave, 0), 1);
+      const centre = 1 + LEAD - span * legEase(life);
       const amp = 1.6 * Math.sin(Math.PI * life) ** 2;
 
       // Stretch under the wave, then rescale so the widths still add up
