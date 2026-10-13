@@ -24,7 +24,7 @@
     img.src = bike.image;
     img.alt = `Plakat: ${bike.name}`;
     section.querySelector(".bike__year").textContent = bike.year;
-    // One span per letter (rise + wave), inside one span that holds
+    // One span per letter (swipe-in + wave), inside one span that holds
     // them (the outer span keeps the parallax).
     const name = section.querySelector(".bike__name");
     name.setAttribute("aria-label", bike.name);
@@ -113,31 +113,29 @@
   }
 
   // Name entrance, played each time a poster comes into view (from
-  // either direction):
-  // 1. the letters rise from below the screen edge one after another,
-  // 2. meanwhile a wave runs once over the word, right to left:
-  //    letters under it stretch, the others squeeze, like looking
-  //    through moving glass. The name's left and right edges never move;
-  //    only the widths inside redistribute.
+  // either direction): a wave runs once over the word, right to left.
+  // Letters under it stretch and the others squeeze, like looking
+  // through moving glass; the name's left and right edges never move,
+  // only the widths inside redistribute. Each letter swipes up into its
+  // own masked line just as the wave reaches it, so the swipe-ins ride
+  // the wave instead of running as a separate step.
   // A horizontal blur follows the wave's speed (motion blur).
   const blurDev = document.getElementById("name-blur-dev");
   const entrances = new Map();
 
-  const RISE = 1.1; // seconds per letter
-  const STAGGER = 0.03;
-  const WAVE_START = 0.1;
-  const WAVE_LEG = 1.0; // the single right-to-left pass
-  const riseEase = gsap.parseEase("power4.out");
-  const legEase = gsap.parseEase("sine.inOut");
+  const WAVE = 1.1; // seconds for the wave to cross the name
+  const SWIPE = 0.75; // seconds per letter swipe-in
+  const LEAD = 0.18; // a letter starts this far (0..1) ahead of the wave
+  const swipeEase = gsap.parseEase("power3.out");
+  // Nearly linear travel, only a touch of easing at both ends.
+  const waveEase = (p) => 0.85 * p + 0.15 * (0.5 - 0.5 * Math.cos(Math.PI * p));
 
   function hideName(name) {
     const inner = name.firstElementChild;
-    const gutter = parseFloat(getComputedStyle(name.parentElement).bottom) || 0;
-    const drop = inner.offsetHeight + gutter + 40;
     inner.style.visibility = "hidden";
     inner.style.filter = "none";
     Array.from(inner.children).forEach((c) => {
-      c.style.transform = `translate3d(0, ${drop}px, 0)`;
+      c.style.transform = `translate3d(0, ${(c.offsetHeight * 1.15).toFixed(2)}px, 0)`;
     });
   }
 
@@ -159,23 +157,26 @@
     const total = widths.reduce((a, b) => a + b, 0) || 1;
     let acc = 0;
     const centres = widths.map((w) => { const m = (acc + w / 2) / total; acc += w; return m; });
-    const gutter = parseFloat(getComputedStyle(name.parentElement).bottom) || 0;
-    const drop = inner.offsetHeight + gutter + 40;
+    const drop = (chars[0]?.offsetHeight || 0) * 1.15;
     const sigma = Math.max(0.09, 1.2 / chars.length);
+
+    // The wave centre travels from 1 + LEAD (right of the word) to
+    // -LEAD (left of it). A letter starts swiping in when the centre
+    // is LEAD ahead of it.
+    const span = 1 + 2 * LEAD;
+    const starts = centres.map((m) => WAVE * (1 - m) / span);
 
     inner.style.filter = "url(#name-blur)";
     const state = { t: 0 };
-    const duration = Math.max(RISE + STAGGER * (chars.length - 1), WAVE_START + WAVE_LEG);
+    const duration = Math.max(WAVE, Math.max(...starts) + SWIPE);
     let lastCentre = null;
 
     function render() {
       const t = state.t;
-      // Wave centre: from right of the word to left of it.
-      const w = t - WAVE_START;
-      const life = Math.min(Math.max(w / WAVE_LEG, 0), 1);
-      const centre = 1.15 - 1.3 * legEase(life);
-      // Strength fades in at the start and out at the end.
-      const amp = 1.7 * Math.sin(Math.PI * life);
+      const life = Math.min(Math.max(t / WAVE, 0), 1);
+      const centre = 1 + LEAD - span * waveEase(life);
+      // Strength swells in and dies out smoothly (zero slope at both ends).
+      const amp = 1.6 * Math.sin(Math.PI * life) ** 2;
 
       // Stretch under the wave, then rescale so the widths still add up
       // to the resting width: the letters elsewhere get squeezed.
@@ -187,8 +188,8 @@
       let offset = 0;
       chars.forEach((c, i) => {
         const sx = raw[i] * k;
-        const p = Math.min(Math.max((t - i * STAGGER) / RISE, 0), 1);
-        const y = drop * (1 - riseEase(p));
+        const p = Math.min(Math.max((t - starts[i]) / SWIPE, 0), 1);
+        const y = drop * (1 - swipeEase(p));
         c.style.transform = `translate3d(${(x - offset).toFixed(2)}px, ${y.toFixed(2)}px, 0) scaleX(${sx.toFixed(4)})`;
         x += widths[i] * sx;
         offset += widths[i];

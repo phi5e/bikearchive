@@ -1,12 +1,13 @@
 # astalla bici – bike archive
 
-Eine Seite, ein Plakat pro Bildschirm (100vh). Unten links steht der
+Eine Seite, ein Plakat pro Bildschirm; das Plakat ist 80% der
+Bildschirmhöhe hoch, mittig zwischen Menü und unterem Rand. Unten links steht der
 Rahmenname (immer einzeilig, skaliert mit der Breite,
 max. 160px, Archivo Expanded Black), darüber das Jahr (18px). Beim
-Scrollen (in beide Richtungen) kommen die Buchstaben einzeln von unten
-herein, während eine Welle einmal von rechts nach links über
-den Namen läuft und einzelne Buchstaben dehnt und staucht; die
-Außenkanten bleiben fest (GSAP, `js/vendor/`). Links mittig öffnet „view list“
+Scrollen (in beide Richtungen) läuft eine Welle einmal von rechts nach
+links über den Namen und dehnt und staucht einzelne Buchstaben; jeder
+Buchstabe wischt dabei von unten in seine Zeile, sobald die Welle ihn
+erreicht. Die Außenkanten bleiben fest (GSAP, `js/vendor/`). Links mittig öffnet „view list“
 die Liste aller Räder.
 
 Plain HTML/CSS/JS, kein Build. `index.html` einfach öffnen oder hosten.
