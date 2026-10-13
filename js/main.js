@@ -64,6 +64,73 @@
   document.fonts.ready.then(layout);
   window.addEventListener("resize", layout);
 
+  // Parallax: while a poster passes through the screen, the poster,
+  // the name and the year drift at different speeds.
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const sections = Array.from(document.querySelectorAll(".bike"));
+  const layers = sections.map((s) => ({
+    section: s,
+    poster: s.querySelector(".bike__poster"),
+    year: s.querySelector(".bike__year"),
+    name: s.querySelector(".bike__name"),
+  }));
+  let ticking = false;
+  function parallax() {
+    ticking = false;
+    const vh = window.innerHeight;
+    layers.forEach(({ section, poster, year, name }) => {
+      const top = section.getBoundingClientRect().top;
+      if (top > vh || top < -vh) return;
+      const p = top / vh; // 0 when the poster fills the screen, ±1 one screen away
+      poster.style.transform = `translate3d(0, ${p * -6}vh, 0)`;
+      name.style.transform = `translate3d(0, ${p * 14}vh, 0)`;
+      year.style.transform = `translate3d(0, ${p * 26}vh, 0)`;
+    });
+  }
+  if (!reduceMotion) {
+    window.addEventListener("scroll", () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(parallax);
+      }
+    }, { passive: true });
+    window.addEventListener("resize", parallax);
+    parallax();
+  }
+
+  // "bike archive" keeps switching typefaces.
+  const title = document.getElementById("topbar-title");
+  const faces = [
+    { family: "Instrument Serif", weight: 400, style: "normal" },
+    { family: "Bodoni Moda", weight: 700, style: "italic" },
+    { family: "Space Mono", weight: 400, style: "normal" },
+    { family: "Syne", weight: 800, style: "normal" },
+    { family: "Unbounded", weight: 600, style: "normal" },
+    { family: "Fraunces", weight: 300, style: "italic" },
+    { family: "Pixelify Sans", weight: 400, style: "normal" },
+    { family: "Rubik Mono One", weight: 400, style: "normal" },
+    { family: "Major Mono Display", weight: 400, style: "normal" },
+    { family: "Inter Tight", weight: 400, style: "normal" },
+  ];
+  function setFace(f) {
+    title.style.fontFamily = `"${f.family}", var(--font-sans)`;
+    title.style.fontWeight = f.weight;
+    title.style.fontStyle = f.style;
+  }
+  setFace(faces[0]);
+  if (!reduceMotion) {
+    // Only start once every face is in, so it never flashes a fallback.
+    Promise.all(faces.map((f) => document.fonts.load(`${f.style} ${f.weight} 16px "${f.family}"`, "bike archive")))
+      .catch(() => {})
+      .then(() => {
+        let i = 0;
+        setInterval(() => {
+          i = (i + 1) % faces.length;
+          setFace(faces[i]);
+        }, 320);
+      });
+  }
+
   // view list ↔ close list
   function setOpen(open) {
     document.body.classList.toggle("is-list-open", open);
