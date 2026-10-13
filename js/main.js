@@ -1,4 +1,9 @@
 (function () {
+  // Variant: the names start in Instrument Serif (the earlier face) and
+  // melt into the wide sans during the entrance. Set to false to go back
+  // to sans only.
+  const MORPH_FROM_SERIF = true;
+
   const bikes = window.BIKES || [];
   const archive = document.getElementById("archive");
   const listItems = document.getElementById("bike-list-items");
@@ -36,7 +41,16 @@
       c.className = "bike__char";
       const g = document.createElement("span");
       g.className = "bike__glyph";
-      g.textContent = ch;
+      if (MORPH_FROM_SERIF) {
+        // Sans and serif share one baseline; the serif takes no width
+        // and is stretched over the sans's slot while it morphs.
+        g.classList.add("bike__glyph--morph");
+        g.innerHTML = '<span class="bike__sans"></span><span class="bike__serif-wrap"><span class="bike__serif"></span></span>';
+        g.querySelector(".bike__sans").textContent = ch;
+        g.querySelector(".bike__serif").textContent = ch;
+      } else {
+        g.textContent = ch;
+      }
       c.appendChild(g);
       inner.appendChild(c);
     });
@@ -130,7 +144,13 @@
   //   right to left, following the curtain. Letters under it stretch
   //   and the others squeeze, like looking through moving glass.
   // A horizontal blur follows the movement (motion blur).
+  // With MORPH_FROM_SERIF, the letters slide in as serif and melt into
+  // the sans: the two cross-fade under a "goo" filter (blur + hard alpha
+  // threshold), which blends their outlines into one changing shape.
   const blurDev = document.getElementById("name-blur-dev");
+  const gooDev = document.getElementById("name-goo-dev");
+  const MORPH_FROM = 0.3; // morph starts at this share of the wave
+  const MORPH_TAIL = 0.35; // and ends this long after the wave
   const entrances = new Map();
 
   const SLIDE = 0.75; // seconds per letter slide-in
@@ -142,10 +162,17 @@
   // Linear through the middle, eased out hard over the last stretch.
   const legEase = (p) => 0.7 * p + 0.3 * (1 - (1 - p) ** 4);
 
+  function setMorph(name, e) {
+    name.querySelectorAll(".bike__serif").forEach((s) => { s.style.opacity = e === null ? "" : String(1 - e); });
+    name.querySelectorAll(".bike__sans").forEach((s) => { s.style.opacity = e === null ? "" : String(e); });
+  }
+
   function hideName(name) {
     const inner = name.firstElementChild;
     inner.style.visibility = "hidden";
     inner.style.filter = "none";
+    name.style.filter = "";
+    if (MORPH_FROM_SERIF) setMorph(name, 0);
     Array.from(inner.children).forEach((c) => {
       c.style.transform = "";
       c.firstElementChild.style.transform = "translate3d(110%, 0, 0)";
@@ -156,6 +183,8 @@
     const inner = name.firstElementChild;
     inner.style.visibility = "";
     inner.style.filter = "none";
+    name.style.filter = "";
+    if (MORPH_FROM_SERIF) setMorph(name, null);
     Array.from(inner.children).forEach((c) => {
       c.style.transform = "";
       c.firstElementChild.style.transform = "";
@@ -185,7 +214,15 @@
 
     inner.style.filter = "url(#name-blur)";
     const state = { t: 0 };
-    const duration = wave;
+    const duration = MORPH_FROM_SERIF ? wave + MORPH_TAIL : wave;
+
+    // Morph: stretch each serif glyph over its sans slot.
+    const serifs = MORPH_FROM_SERIF ? chars.map((c) => c.querySelector(".bike__serif")) : [];
+    serifs.forEach((s, i) => {
+      s.style.transform = `scaleX(${(widths[i] / (s.offsetWidth || 1)).toFixed(4)})`;
+    });
+    const fontSize = parseFloat(getComputedStyle(name).fontSize) || 160;
+    const morphStart = wave * MORPH_FROM;
     let lastCentre = null;
     let lastSlide = null;
 
@@ -223,6 +260,16 @@
         x += widths[i] * sx;
         offset += widths[i];
       });
+
+      // 3. Morph serif -> sans.
+      if (MORPH_FROM_SERIF) {
+        const m = Math.min(Math.max((t - morphStart) / (duration - morphStart), 0), 1);
+        const e = m * m * (3 - 2 * m);
+        setMorph(name, e);
+        const goo = fontSize * 0.05 * Math.sin(Math.PI * m) ** 3;
+        gooDev.setAttribute("stdDeviation", goo.toFixed(2));
+        name.style.filter = goo > 0.05 ? "url(#name-goo)" : "";
+      }
 
       // Motion blur from both movements.
       const waveSpeed = lastCentre === null ? 0 : Math.abs(centre - lastCentre) * amp * 220;

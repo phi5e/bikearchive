@@ -13,6 +13,10 @@ die Liste aller Räder, mittig auf dieser Linie (der aktuelle Name steht
 auf der Linie, die anderen darüber und darunter). Oben: Logo, „bike
 archive“ und „info“, ohne Hintergrund.
 
+Variante (zum Ausprobieren): Die Namen kommen in Instrument Serif herein
+und verschmelzen dabei zur breiten Sans. Abschalten: in `js/main.js`
+`MORPH_FROM_SERIF = false` setzen.
+
 Plain HTML/CSS/JS, kein Build. `index.html` einfach öffnen oder hosten.
 
 ## Räder pflegen
