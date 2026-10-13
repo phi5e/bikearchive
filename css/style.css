@@ -75,7 +75,7 @@ ul {
 
 /* ---------------------------------------------
    Topbar — floats over the posters so each one
-   can stay a full 100vh tall.
+   can stay a full 100vh tall (the poster sits centred below it).
 --------------------------------------------- */
 
 .topbar {
@@ -90,8 +90,6 @@ ul {
   background: rgba(255, 255, 255, 0.18);
   -webkit-backdrop-filter: blur(22px) saturate(170%);
   backdrop-filter: blur(22px) saturate(170%);
-  border-bottom: var(--line-w) solid var(--line);
-  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .topbar__logo {
@@ -113,15 +111,20 @@ ul {
 }
 
 /* ---------------------------------------------
-   Posters — one per screen, snapping.
+   Posters — one per screen, snapping. Each poster
+   is 80% of the screen height, centred in the
+   space between the menu and the bottom edge.
 --------------------------------------------- */
 
 .bike {
+  --poster-h: 80vh;
   position: relative;
   height: 100vh;
   height: 100svh;
   display: flex;
   justify-content: center;
+  align-items: flex-start;
+  padding-top: calc(var(--topbar-h) + (100vh - var(--topbar-h) - var(--poster-h)) / 2);
   /* Only clip sideways (wide posters on phones). Vertically nothing is
      clipped, so the drifting names can lie over the neighbouring posters. */
   overflow-x: clip;
@@ -130,9 +133,9 @@ ul {
 
 .bike__poster {
   display: block;
-  height: 100%;
+  height: var(--poster-h);
   width: auto;
-  /* Always the full viewport height; on screens narrower than the
+  /* Always 80% of the viewport height; on screens narrower than the
      poster the sides are cropped instead of shrinking it. */
   flex: none;
 }
@@ -177,10 +180,12 @@ ul {
   white-space: nowrap;
 }
 
-/* Holds the letters main.js animates (rise + wave); the outer
-   .bike__name keeps the parallax transform. */
+/* Holds the letters main.js animates (swipe-in + wave); the outer
+   .bike__name keeps the parallax transform. Its bottom edge masks the
+   letters while they swipe up into place. */
 .bike__name-inner {
   display: inline-block;
+  clip-path: inset(-50% -50% 0 -50%);
 }
 
 /* Each letter stretches from its own left edge. */
