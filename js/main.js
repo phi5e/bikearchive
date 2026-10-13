@@ -294,42 +294,82 @@
     entrances.set(name, tween);
   }
 
+  // Called before a jump from the list, so no poster animates on the way.
+  let deferNames = () => {};
+
   if (window.gsap && !reduceMotion) {
     names.forEach(hideName);
     const nameSections = sections.map((s) => ({ section: s, name: s.querySelector(".bike__name") }));
     // Checked on every scroll frame (an IntersectionObserver misses a
     // poster that ends exactly at the screen edge, which scroll snap
     // makes the normal case).
-    function checkNames() {
+    // When a scroll travels 2+ posters from where it started (a fast
+    // flick, a jump from the list), the posters flying past don't
+    // animate; the one it lands on waits until the scroll has come to
+    // rest, plus a short delay.
+    const JUMP_DELAY = 0.3; // seconds after the scroll stops
+    const IDLE_MS = 120; // no scroll events for this long = at rest
+    let restIndex = -1; // poster on screen when the scroll last stopped
+    let idleTimer = 0;
+    let jumping = false;
+    const pending = new Set();
+    deferNames = () => { jumping = true; };
+
+    function onScreen(section) {
+      const r = section.getBoundingClientRect();
       const vh = window.innerHeight;
-      nameSections.forEach(({ section, name }) => {
-        const r = section.getBoundingClientRect();
-        const visible = Math.min(r.bottom, vh) - Math.max(r.top, 0);
+      return Math.min(r.bottom, vh) - Math.max(r.top, 0);
+    }
+
+    function checkNames(atRest) {
+      const vh = window.innerHeight;
+      nameSections.forEach(({ section, name }, i) => {
+        const visible = onScreen(section);
         if (visible >= vh * 0.55) {
-          if (!entrances.has(name)) playName(name);
-        } else if (visible <= 1 && entrances.has(name)) {
+          if (restIndex < 0) restIndex = i;
+          if (entrances.has(name)) return;
+          if (!jumping && Math.abs(i - restIndex) < 2) {
+            playName(name);
+          } else if (atRest) {
+            pending.delete(name);
+            entrances.set(name, gsap.delayedCall(JUMP_DELAY, () => {
+              entrances.delete(name);
+              if (onScreen(section) >= vh * 0.55) playName(name);
+            }));
+          } else {
+            pending.add(name);
+          }
+        } else if (visible <= 1 && (entrances.has(name) || pending.has(name))) {
           // Off screen: reset, so it plays from scratch next time.
-          entrances.get(name).kill();
+          entrances.get(name)?.kill();
           entrances.delete(name);
+          pending.delete(name);
           hideName(name);
         }
       });
+      if (atRest) {
+        const current = nameSections.findIndex(({ section }) => onScreen(section) >= vh * 0.55);
+        if (current >= 0) restIndex = current;
+        jumping = false;
+      }
     }
     let nameTick = false;
     window.addEventListener("scroll", () => {
       if (!nameTick) {
         nameTick = true;
-        requestAnimationFrame(() => { nameTick = false; checkNames(); });
+        requestAnimationFrame(() => { nameTick = false; checkNames(false); });
       }
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => checkNames(true), IDLE_MS);
     }, { passive: true });
     document.fonts.ready.then(() => {
       layout();
       names.forEach((n) => { if (!entrances.has(n)) hideName(n); });
-      checkNames();
+      checkNames(true);
     });
     window.addEventListener("resize", () => {
       names.forEach((n) => { if (!entrances.has(n)) hideName(n); });
-      checkNames();
+      checkNames(true);
     });
   }
 
@@ -357,6 +397,7 @@
     const li = e.target.closest(".bike-list__item");
     if (!li) return;
     e.preventDefault();
+    deferNames();
     document.getElementById(li.dataset.target).scrollIntoView({ behavior: "smooth" });
     history.replaceState(null, "", `#${li.dataset.target}`);
     setOpen(false);
