@@ -21,7 +21,7 @@
 
   --name-max: 160px;
   --year-size: 13.5px;
-  --toggle-size: 9px;
+  --toggle-size: 11.7px;
   --list-size: 18px;
 
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
@@ -85,11 +85,8 @@ ul {
   height: var(--topbar-h);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 var(--gutter);
-  /* Frosted glass: blurs and brightens whatever scrolls underneath. */
-  background: rgba(255, 255, 255, 0.18);
-  -webkit-backdrop-filter: blur(22px) saturate(170%);
-  backdrop-filter: blur(22px) saturate(170%);
 }
 
 .topbar__logo {
@@ -98,14 +95,20 @@ ul {
   letter-spacing: -0.01em;
 }
 
-/* Centered on the page, independent of the logo's width. The face is
-   swapped by main.js every few hundred ms. */
+.topbar__info {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Centered on the page, independent of the logo's width. */
 .topbar__title {
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  font-size: 16px;
+  font-size: 14px;
+  font-weight: 400;
   line-height: 1;
   white-space: nowrap;
 }
@@ -268,25 +271,27 @@ ul {
 
 /* ---------------------------------------------
    List — plain names right next to the toggle,
-   starting on its line and fading out where the
-   big name begins (--list-bottom, set in main.js).
+   centred on its line with names above and below,
+   feathered at the top and bottom.
 --------------------------------------------- */
 
 .bike-list {
   position: fixed;
-  /* First name sits centered on the toggle's line. */
-  top: calc(50% - var(--list-size) * 0.65);
-  bottom: var(--list-bottom, 180px);
+  /* Centred on the toggle's line, as far up as down (--list-half, set in
+     main.js). The padding lets the first and last names reach the line. */
+  top: calc(50% - var(--list-half, 200px));
+  height: calc(var(--list-half, 200px) * 2);
   left: calc(max(var(--gutter), 24px) - 20px + var(--toggle-w, 90px) + 24px);
   right: var(--gutter);
   z-index: 15;
   overflow-y: auto;
-  padding-bottom: 48px;
+  padding: calc(var(--list-half, 200px) - var(--list-size) * 0.65) 0;
   pointer-events: none;
   visibility: hidden;
   transition: visibility 0s linear 0.7s;
-  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 96px), transparent);
-  mask-image: linear-gradient(to bottom, #000 calc(100% - 96px), transparent);
+  /* Feathered at both ends. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 96px, #000 calc(100% - 96px), transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 96px, #000 calc(100% - 96px), transparent);
   scrollbar-width: none;
 }
 
