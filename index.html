@@ -32,10 +32,10 @@
     <filter id="name-blur" x="-20%" y="-50%" width="140%" height="200%">
       <feGaussianBlur id="name-blur-dev" stdDeviation="0 0" />
     </filter>
-    <!-- Serif-to-sans morph: blur, then a hard alpha threshold. -->
-    <filter id="name-goo" x="-10%" y="-30%" width="120%" height="160%">
-      <feGaussianBlur id="name-goo-dev" in="SourceGraphic" stdDeviation="0" />
-      <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -10" />
+    <!-- Serif-to-sans morph: a hard alpha threshold over each blurred,
+         cross-fading letter (the blur is set in main.js). -->
+    <filter id="name-goo" x="-50%" y="-30%" width="200%" height="160%">
+      <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 14 -6" />
     </filter>
   </svg>
 

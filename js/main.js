@@ -144,13 +144,16 @@
   //   right to left, following the curtain. Letters under it stretch
   //   and the others squeeze, like looking through moving glass.
   // A horizontal blur follows the movement (motion blur).
-  // With MORPH_FROM_SERIF, the letters slide in as serif and melt into
-  // the sans: the two cross-fade under a "goo" filter (blur + hard alpha
-  // threshold), which blends their outlines into one changing shape.
+  // With MORPH_FROM_SERIF, the letters slide in as serif and each one
+  // melts into the sans once, as the wave's crest passes over it (so the
+  // morph sweeps right to left and only ever moves forward). Serif and
+  // sans cross-fade while both are blurred, and a hard alpha threshold
+  // (the "goo" filter) turns that into one solid,
+  // changing outline. The threshold sits on each letter (not the whole
+  // name) so the motion blur on top of it stays soft.
   const blurDev = document.getElementById("name-blur-dev");
-  const gooDev = document.getElementById("name-goo-dev");
-  const MORPH_FROM = 0.3; // morph starts at this share of the wave
-  const MORPH_TAIL = 0.35; // and ends this long after the wave
+  const MORPH_AHEAD = 0.12; // a letter starts morphing when the crest is this far (0..1) to its right
+  const MORPH_SPAN = 0.32; // and has finished when the crest has moved this much further
   const entrances = new Map();
 
   const SLIDE = 0.75; // seconds per letter slide-in
@@ -163,15 +166,15 @@
   const legEase = (p) => 0.7 * p + 0.3 * (1 - (1 - p) ** 4);
 
   function setMorph(name, e) {
-    name.querySelectorAll(".bike__serif").forEach((s) => { s.style.opacity = e === null ? "" : String(1 - e); });
-    name.querySelectorAll(".bike__sans").forEach((s) => { s.style.opacity = e === null ? "" : String(e); });
+    name.querySelectorAll(".bike__glyph").forEach((g) => { g.style.filter = ""; });
+    name.querySelectorAll(".bike__serif").forEach((s) => { s.style.opacity = e === null ? "" : String(1 - e); s.style.filter = ""; });
+    name.querySelectorAll(".bike__sans").forEach((s) => { s.style.opacity = e === null ? "" : String(e); s.style.filter = ""; });
   }
 
   function hideName(name) {
     const inner = name.firstElementChild;
     inner.style.visibility = "hidden";
     inner.style.filter = "none";
-    name.style.filter = "";
     if (MORPH_FROM_SERIF) setMorph(name, 0);
     Array.from(inner.children).forEach((c) => {
       c.style.transform = "";
@@ -183,7 +186,6 @@
     const inner = name.firstElementChild;
     inner.style.visibility = "";
     inner.style.filter = "none";
-    name.style.filter = "";
     if (MORPH_FROM_SERIF) setMorph(name, null);
     Array.from(inner.children).forEach((c) => {
       c.style.transform = "";
@@ -203,7 +205,7 @@
     const total = widths.reduce((a, b) => a + b, 0) || 1;
     let acc = 0;
     const centres = widths.map((w) => { const m = (acc + w / 2) / total; acc += w; return m; });
-    const sigma = Math.max(0.09, 1.2 / chars.length);
+    const sigma = Math.max(0.1, 1.4 / chars.length);
     const n = chars.length;
     // Last letter first.
     const starts = chars.map((_, i) => (n - 1 - i) * STAGGER);
@@ -214,15 +216,15 @@
 
     inner.style.filter = "url(#name-blur)";
     const state = { t: 0 };
-    const duration = MORPH_FROM_SERIF ? wave + MORPH_TAIL : wave;
+    const duration = wave;
 
     // Morph: stretch each serif glyph over its sans slot.
     const serifs = MORPH_FROM_SERIF ? chars.map((c) => c.querySelector(".bike__serif")) : [];
     serifs.forEach((s, i) => {
       s.style.transform = `scaleX(${(widths[i] / (s.offsetWidth || 1)).toFixed(4)})`;
     });
+    const sanses = MORPH_FROM_SERIF ? chars.map((c) => c.querySelector(".bike__sans")) : [];
     const fontSize = parseFloat(getComputedStyle(name).fontSize) || 160;
-    const morphStart = wave * MORPH_FROM;
     let lastCentre = null;
     let lastSlide = null;
 
@@ -243,7 +245,7 @@
       const life = Math.min(Math.max(t / wave, 0), 1);
       const centre = 1 + LEAD - span * legEase(life);
       // The tail is stretched (life ** 0.8) so the wave dies out slowly.
-      const amp = 1.6 * Math.sin(Math.PI * life ** 0.8) ** 2;
+      const amp = 2.8 * Math.sin(Math.PI * life ** 0.8) ** 2;
 
       // Stretch under the wave, then rescale so the widths still add up
       // to the resting width: the letters elsewhere get squeezed.
@@ -263,12 +265,20 @@
 
       // 3. Morph serif -> sans.
       if (MORPH_FROM_SERIF) {
-        const m = Math.min(Math.max((t - morphStart) / (duration - morphStart), 0), 1);
-        const e = m * m * (3 - 2 * m);
-        setMorph(name, e);
-        const goo = fontSize * 0.05 * Math.sin(Math.PI * m) ** 3;
-        gooDev.setAttribute("stdDeviation", goo.toFixed(2));
-        name.style.filter = goo > 0.05 ? "url(#name-goo)" : "";
+        centres.forEach((pos, i) => {
+          // The crest only moves right to left, so this only grows.
+          const m = Math.min(Math.max((pos + MORPH_AHEAD - centre) / MORPH_SPAN, 0), 1);
+          const e = m * m * (3 - 2 * m);
+          const blur = fontSize * 0.045 * Math.sin(Math.PI * m) ** 2;
+          serifs[i].style.opacity = String(1 - e);
+          sanses[i].style.opacity = String(e);
+          const f = blur > 0.05 ? `blur(${blur.toFixed(2)}px)` : "";
+          serifs[i].style.filter = f;
+          sanses[i].style.filter = f;
+          // Threshold per letter, only while it melts (inside the motion
+          // blur, which is applied to the whole name afterwards).
+          glyphs[i].style.filter = m > 0 && m < 1 ? "url(#name-goo)" : "";
+        });
       }
 
       // Motion blur from both movements.
