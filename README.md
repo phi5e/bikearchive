@@ -1,8 +1,8 @@
 # astalla bici – bike archive
 
 Eine Seite, ein Plakat pro Bildschirm (100vh). Unten links steht der
-Rahmenname (Inter Tight Black, immer einzeilig, skaliert mit der Breite,
-max. 120px), darüber das Jahr (36px). Links mittig öffnet „view list“
+Rahmenname (immer einzeilig, skaliert mit der Breite,
+max. 120px, Instrument Serif), darüber das Jahr (18px). Links mittig öffnet „view list“
 die Liste aller Räder.
 
 Plain HTML/CSS/JS, kein Build. `index.html` einfach öffnen oder hosten.

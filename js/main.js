@@ -30,9 +30,9 @@
     const li = document.createElement("li");
     li.className = "bike-list__item";
     li.dataset.target = id;
-    li.innerHTML = `<a href="#${id}"><span class="bike-list__name"></span><span class="bike-list__year"></span></a>`;
-    li.querySelector(".bike-list__name").textContent = bike.name;
-    li.querySelector(".bike-list__year").textContent = bike.year;
+    li.style.setProperty("--i", i);
+    li.innerHTML = `<a href="#${id}"></a>`;
+    li.querySelector("a").textContent = bike.name;
     listItems.appendChild(li);
   });
 
@@ -49,9 +49,20 @@
       el.style.fontSize = `${Math.floor(size * 100) / 100}px`;
     });
   }
-  fitNames();
-  document.fonts.ready.then(fitNames);
-  window.addEventListener("resize", fitNames);
+  // The list sits right of the toggle (as wide as "close list") and
+  // ends where the tallest caption (year + big name) begins.
+  const root = document.documentElement;
+  function layout() {
+    fitNames();
+    root.style.setProperty("--toggle-w", `${toggle.offsetWidth}px`);
+    const captions = Array.from(document.querySelectorAll(".bike__caption"));
+    const tallest = Math.max(0, ...captions.map((c) => c.offsetHeight));
+    const gutter = captions[0] ? parseFloat(getComputedStyle(captions[0]).bottom) : 0;
+    root.style.setProperty("--list-bottom", `${Math.ceil(tallest + gutter + 16)}px`);
+  }
+  layout();
+  document.fonts.ready.then(layout);
+  window.addEventListener("resize", layout);
 
   // view list ↔ close list
   function setOpen(open) {

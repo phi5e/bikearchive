@@ -1,9 +1,8 @@
 /* ============================================================
    astalla bici – bike archive
    Same look as the portfolio: warm paper background, pure black
-   ink, hairline rules, Sora for the small type. The frame names
-   are set in Inter Tight Black (closest free cut to Helvetica
-   Now Black on Google Fonts).
+   ink, hairline rules, Sora for the topbar. The frame names are
+   set in Instrument Serif; year, list and toggle in Inter Tight.
    ============================================================ */
 
 :root {
@@ -14,14 +13,16 @@
   --fg-muted: #6b6b66;
 
   --font: "Sora", sans-serif;
-  --font-display: "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-display: "Instrument Serif", Georgia, "Times New Roman", serif;
+  --font-sans: "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif;
 
   --topbar-h: 56px;
   --gutter: clamp(18px, 3vw, 32px);
 
   --name-max: 120px;
-  --year-size: 36px;
-  --toggle-size: 24px;
+  --year-size: 18px;
+  --toggle-size: 18px;
+  --list-size: 18px;
 
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -124,12 +125,11 @@ ul {
 
 .bike__year {
   display: block;
-  font-family: var(--font-display);
-  font-weight: 900;
+  font-family: var(--font-sans);
+  font-weight: 400;
   font-size: var(--year-size);
-  line-height: 1;
-  letter-spacing: -0.02em;
-  margin-bottom: 0.15em;
+  line-height: 1.2;
+  margin-bottom: 4px;
 }
 
 /* Font size is fitted in main.js so the name always fills at most the
@@ -137,10 +137,10 @@ ul {
 .bike__name {
   display: block;
   font-family: var(--font-display);
-  font-weight: 900;
+  font-weight: 400;
   font-size: var(--name-max);
   line-height: 0.9;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.01em;
   white-space: nowrap;
 }
 
@@ -161,11 +161,10 @@ ul {
   background: none;
   border: 0;
   color: var(--ink);
-  font-family: var(--font);
+  font-family: var(--font-sans);
   font-size: var(--toggle-size);
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.3;
-  letter-spacing: -0.01em;
   white-space: nowrap;
   text-align: left;
   cursor: pointer;
@@ -204,24 +203,25 @@ ul {
 }
 
 /* ---------------------------------------------
-   List panel — slides in from the right edge.
+   List — plain names right next to the toggle,
+   starting on its line and fading out where the
+   big name begins (--list-bottom, set in main.js).
 --------------------------------------------- */
 
 .bike-list {
   position: fixed;
-  top: var(--topbar-h);
-  right: 0;
-  bottom: 0;
+  top: calc(50% - var(--toggle-size) * 0.65);
+  bottom: var(--list-bottom, 180px);
+  left: calc(max(var(--gutter), 24px) - 20px + var(--toggle-w, 90px) + 24px);
+  right: var(--gutter);
   z-index: 15;
-  width: clamp(260px, 30vw, 460px);
-  max-width: calc(100vw - 170px);
   overflow-y: auto;
-  padding: 22px 0 80px;
-  background: var(--bg);
-  border-left: var(--line-w) solid var(--line);
-  transform: translateX(100%);
+  padding-bottom: 48px;
+  pointer-events: none;
   visibility: hidden;
-  transition: transform var(--slide), visibility 0s linear 0.7s;
+  transition: visibility 0s linear 0.7s;
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 96px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 96px), transparent);
   scrollbar-width: none;
 }
 
@@ -230,51 +230,47 @@ ul {
 }
 
 .is-list-open .bike-list {
-  transform: translateX(0);
+  pointer-events: auto;
   visibility: visible;
-  transition: transform var(--slide), visibility 0s;
+  transition: visibility 0s;
 }
 
-.bike-list__items {
-  border-top: var(--line-w) solid var(--line);
+.bike-list__item {
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity 0.4s var(--ease-out), transform 0.7s var(--ease-out);
+}
+
+.is-list-open .bike-list__item {
+  opacity: 1;
+  transform: translateX(0);
+  transition-delay: calc(var(--i, 0) * 25ms + 150ms);
 }
 
 .bike-list__item a {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 7px var(--gutter);
-  border-bottom: var(--line-w) solid var(--line);
-  font-size: 13px;
-  font-weight: 500;
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-size: var(--list-size);
+  font-weight: 400;
+  line-height: 1.3;
   transition: opacity 0.25s var(--ease-out);
 }
 
 .bike-list__item a:hover {
-  opacity: 0.6;
-}
-
-.bike-list__year {
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--fg-muted);
+  opacity: 0.5;
 }
 
 .bike-list__item.is-current a {
-  font-weight: 600;
   text-decoration: underline;
+  text-decoration-thickness: 1px;
   text-underline-offset: 3px;
 }
 
 @media (max-width: 600px) {
   :root {
-    --year-size: 22px;
-    --toggle-size: 18px;
-  }
-
-  .bike-list {
-    max-width: calc(100vw - 130px);
+    --toggle-size: 16px;
+    --list-size: 16px;
+    --year-size: 16px;
   }
 }
 
@@ -285,7 +281,9 @@ ul {
 
   .list-toggle,
   .list-toggle__word,
-  .bike-list {
+  .bike-list,
+  .bike-list__item {
     transition-duration: 0s;
+    transition-delay: 0s;
   }
 }
