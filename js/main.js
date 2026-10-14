@@ -403,13 +403,13 @@
     if (e.key === "Escape") { setOpen(false); setInfo(false); }
   });
 
-  // info ↔ close: the garage text over the whole screen.
+  // manifesto ↔ close: the garage text over the whole screen.
   const infoToggle = document.getElementById("info-toggle");
   const info = document.getElementById("info");
   function setInfo(open) {
     if (open) setOpen(false);
     document.body.classList.toggle("is-info-open", open);
-    infoToggle.textContent = open ? "close" : "info";
+    infoToggle.textContent = open ? "close" : "manifesto";
     infoToggle.setAttribute("aria-expanded", String(open));
     info.setAttribute("aria-hidden", String(!open));
   }

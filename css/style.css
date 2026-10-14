@@ -6,7 +6,7 @@
    ============================================================ */
 
 :root {
-  --bg: #e6d2cf;
+  --bg: #a8a096; /* medium warm grey (trial); previous: #e6d2cf */
   --ink: #000000;
   --line: #000000;
   --line-w: 0.5px;
