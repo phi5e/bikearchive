@@ -135,29 +135,16 @@ ul {
   scroll-snap-align: start;
 }
 
-/* Holds the poster and the paper curl of the paste-up entrance. */
-.bike__paste {
-  position: relative;
+.bike__poster {
+  display: block;
   height: var(--poster-h);
+  width: auto;
   /* Always 80% of the viewport height; on screens narrower than the
      poster the sides are cropped instead of shrinking it. */
   flex: none;
 }
 
-.bike__poster {
-  display: block;
-  height: 100%;
-  width: auto;
-}
-
-.bike__curl {
-  position: absolute;
-  inset: 0;
-  display: none;
-  pointer-events: none;
-}
-
-.bike__paste,
+.bike__poster,
 .bike__year,
 .bike__name {
   will-change: transform;
