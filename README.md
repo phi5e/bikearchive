@@ -23,7 +23,18 @@ Plain HTML/CSS/JS, kein Build. `index.html` einfach öffnen oder hosten.
 
 ## Räder pflegen
 
-Alles steht in `js/bikes.js`: Name, Jahr und Pfad zum Plakat. Die
-Platzhalter in `posters/` durch die echten Plakate ersetzen (gleicher
-Dateiname, oder Pfad in `bikes.js` anpassen). Neue Platzhalter erzeugt
-`node scripts/gen_placeholders.mjs`.
+Ein neues Rad = ein Bild in `posters/` hochladen, sonst nichts. Name und
+Jahr kommen aus dem Dateinamen:
+
+    <Jahr>_<Name_mit_Unterstrichen>.<jpg|png|webp|svg>
+    2018_Mash_Steel_Fixed.jpg  →  2018, „Mash Steel Fixed“
+
+Auf GitHub: Ordner `posters` öffnen → „Add file“ → „Upload files“ →
+Bild reinziehen → „Commit changes“. Eine GitHub Action
+(`.github/workflows/bikes.yml`) baut danach `js/bikes.js` neu; nach etwa
+einer Minute ist das Rad in der Seite und in der Liste. Umbenennen oder
+Löschen einer Datei wirkt genauso. Sortiert wird nach Jahr (älteste
+zuerst). Dateien, die nicht dem Muster folgen, werden ignoriert.
+
+Die `.svg`-Dateien in `posters/` sind Platzhalter; einfach löschen, wenn
+die echten Plakate da sind. Lokal neu bauen: `node scripts/build-bikes.mjs`.
