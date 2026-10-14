@@ -396,6 +396,10 @@ ul {
   letter-spacing: -0.01em;
 }
 
+.info__text + .info__text {
+  margin-top: 0.6em;
+}
+
 .is-info-open .list-toggle {
   opacity: 0;
   pointer-events: none;
