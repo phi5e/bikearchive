@@ -13,7 +13,7 @@
   <header class="topbar">
     <a href="#" class="topbar__logo">astalla bici</a>
     <span class="topbar__title">bike archive</span>
-    <a href="#" class="topbar__info">info</a>
+    <a href="#info" class="topbar__info" id="info-toggle" aria-controls="info" aria-expanded="false">info</a>
   </header>
 
   <button type="button" class="list-toggle" id="list-toggle" aria-controls="bike-list" aria-expanded="false">
@@ -24,6 +24,10 @@
   <nav class="bike-list" id="bike-list" aria-label="Alle Räder">
     <ul class="bike-list__items" id="bike-list-items"></ul>
   </nav>
+
+  <section class="info" id="info" aria-label="Info" aria-hidden="true">
+    <p class="info__text">Astalla Bici is a DIY bike garage in Munich, Germany. We build bikes ourselves and show them here for posterity. None of them are commercial projects or client work. We build what we like from the parts we have, or dream about the parts we don’t. Our garage is, after all, just a garage, and bikes need to be free, like wild mustangs, or some shit. So from time to time we make room for new ideas and new projects. Some bikes are somberly sold, some keenly kept. We cut our unkempt hair, air out our sweaty, oily shirts, and get on with the work.</p>
+  </section>
 
   <main class="archive" id="archive"></main>
 
