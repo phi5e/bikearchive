@@ -1,0 +1,33 @@
+# Rebuilds the bike list (js/bikes.js) from the poster file names
+# whenever images are added, renamed or removed in posters/.
+name: Update bike list
+
+on:
+  push:
+    paths:
+      - "posters/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/build-bikes.mjs
+      - name: Commit the new list
+        run: |
+          if git diff --quiet -- js/bikes.js; then
+            echo "List unchanged."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add js/bikes.js
+          git commit -m "Update bike list from posters/"
+          git push
