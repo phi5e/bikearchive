@@ -335,8 +335,8 @@
     // flick, a jump from the list), the posters flying past don't
     // animate; the one it lands on waits until the scroll has come to
     // rest, plus a short delay.
-    const JUMP_DELAY = 0.3; // seconds after the scroll stops
-    const IDLE_MS = 120; // no scroll events for this long = at rest
+    const JUMP_DELAY = 0.15; // seconds after the scroll stops
+    const IDLE_MS = 60; // no scroll events for this long = at rest
     let restIndex = -1; // poster on screen when the scroll last stopped
     let idleTimer = 0;
     let jumping = false;
