@@ -400,7 +400,22 @@
     setOpen(!document.body.classList.contains("is-list-open"));
   });
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") setOpen(false);
+    if (e.key === "Escape") { setOpen(false); setInfo(false); }
+  });
+
+  // info ↔ close: the garage text over the whole screen.
+  const infoToggle = document.getElementById("info-toggle");
+  const info = document.getElementById("info");
+  function setInfo(open) {
+    if (open) setOpen(false);
+    document.body.classList.toggle("is-info-open", open);
+    infoToggle.textContent = open ? "close" : "info";
+    infoToggle.setAttribute("aria-expanded", String(open));
+    info.setAttribute("aria-hidden", String(!open));
+  }
+  infoToggle.addEventListener("click", (e) => {
+    e.preventDefault();
+    setInfo(!document.body.classList.contains("is-info-open"));
   });
 
   listItems.addEventListener("click", (e) => {

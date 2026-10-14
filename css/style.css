@@ -14,6 +14,7 @@
 
   --font: "Sora", sans-serif;
   --font-display: "Archivo", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-serif: "Instrument Serif", Georgia, serif;
   --font-sans: "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif;
 
   --topbar-h: 56px;
@@ -364,8 +365,51 @@ ul {
   text-underline-offset: 3px;
 }
 
+/* ---------------------------------------------
+   Info — the garage text over the whole screen,
+   in the serif, full width between the gutters.
+--------------------------------------------- */
+
+.info {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  overflow-y: auto;
+  padding: calc(var(--topbar-h) + 24px) var(--gutter) 48px;
+  background: var(--bg);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.45s var(--ease-out), visibility 0s linear 0.45s;
+}
+
+.is-info-open .info {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.45s var(--ease-out), visibility 0s;
+}
+
+.info__text {
+  font-family: var(--font-serif);
+  font-size: var(--info-size, 60px);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+}
+
+.is-info-open .list-toggle {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  :root {
+    --info-size: 40px;
+  }
+}
+
 @media (max-width: 600px) {
   :root {
+    --info-size: 28px;
     --list-size: 16px;
   }
 }
@@ -378,7 +422,8 @@ ul {
   .list-toggle,
   .list-toggle__word,
   .bike-list,
-  .bike-list__item {
+  .bike-list__item,
+  .info {
     transition-duration: 0s;
     transition-delay: 0s;
   }
