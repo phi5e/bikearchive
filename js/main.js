@@ -3,6 +3,10 @@
   // melt into the wide sans during the entrance. Set to false to go back
   // to sans only.
   const MORPH_FROM_SERIF = true;
+  // Variant: each poster is pasted onto the wall as it comes into view,
+  // unrolling from the bottom-right corner to the top-left with a paper
+  // curl. Set to false to show the posters straight away.
+  const PASTE_IN = true;
 
   const bikes = window.BIKES || [];
   const archive = document.getElementById("archive");
@@ -19,7 +23,10 @@
     section.className = "bike";
     section.id = id;
     section.innerHTML = `
-      <img class="bike__poster" alt="" loading="${i < 2 ? "eager" : "lazy"}" />
+      <div class="bike__paste">
+        <img class="bike__poster" alt="" loading="${i < 3 ? "eager" : "lazy"}" />
+        <div class="bike__curl" aria-hidden="true"></div>
+      </div>
       <div class="bike__caption">
         <span class="bike__year"></span>
         <span class="bike__name"></span>
@@ -105,7 +112,7 @@
   const sections = Array.from(document.querySelectorAll(".bike"));
   const layers = sections.map((s) => ({
     section: s,
-    poster: s.querySelector(".bike__poster"),
+    poster: s.querySelector(".bike__paste"),
     year: s.querySelector(".bike__year"),
     name: s.querySelector(".bike__name"),
   }));
@@ -171,7 +178,94 @@
     name.querySelectorAll(".bike__sans").forEach((s) => { s.style.opacity = e === null ? "" : String(e); s.style.filter = ""; });
   }
 
+  // Paste-up: the glued part of the poster is everything on the far side
+  // of a diagonal fold line (x + y >= d, in px) that sweeps from the
+  // bottom-right corner to the top-left. Just ahead of it lies the
+  // curling paper (its back, shaded like a roll) and its shadow.
+  const PASTE_TIME = 1.3;
+  const pastes = new Map();
+
+  // The part of a w×h rectangle with lo <= x + y <= hi, as a polygon.
+  function band(w, h, lo, hi) {
+    let pts = [[0, 0], [w, 0], [w, h], [0, h]];
+    const clip = (keep) => {
+      const out = [];
+      pts.forEach((a, i) => {
+        const b = pts[(i + 1) % pts.length];
+        const fa = keep(a[0] + a[1]);
+        const fb = keep(b[0] + b[1]);
+        if (fa >= 0) out.push(a);
+        if ((fa >= 0) !== (fb >= 0)) {
+          const t = fa / (fa - fb);
+          out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]);
+        }
+      });
+      pts = out;
+    };
+    clip((v) => v - lo);
+    clip((v) => hi - v);
+    if (pts.length < 3) return "polygon(0 0, 0 0, 0 0)";
+    return `polygon(${pts.map(([x, y]) => `${x.toFixed(1)}px ${y.toFixed(1)}px`).join(", ")})`;
+  }
+
+  function pasteParts(name) {
+    const paste = name.closest(".bike").querySelector(".bike__paste");
+    return { paste, img: paste.firstElementChild, curl: paste.lastElementChild };
+  }
+
+  function hidePaste(name) {
+    if (!PASTE_IN) return;
+    const { img, curl } = pasteParts(name);
+    pastes.get(name)?.kill();
+    pastes.delete(name);
+    img.style.clipPath = "polygon(0 0, 0 0, 0 0)";
+    curl.style.display = "none";
+  }
+
+  function playPaste(name) {
+    if (!PASTE_IN) return;
+    const { paste, img, curl } = pasteParts(name);
+    pastes.get(name)?.kill();
+    const w = paste.offsetWidth;
+    const h = paste.offsetHeight;
+    const D = w + h;
+    const roll = Math.min(w, h) * 0.22; // width of the curl
+    const shade = roll * 0.45; // its shadow on the wall
+    const state = { p: 0 };
+    const pct = (v) => `${((v / D) * 100).toFixed(2)}%`;
+    function render() {
+      const d = D * (1 - state.p);
+      const r = Math.min(roll, d);
+      const s2 = Math.min(shade, d);
+      img.style.clipPath = band(w, h, d, Infinity);
+      curl.style.display = r > 0.5 ? "block" : "none";
+      curl.style.clipPath = band(w, h, d, d + r + s2);
+      // 135deg runs along x + y, so the stops sit at x + y = const.
+      curl.style.background = `linear-gradient(135deg,
+        transparent ${pct(d)},
+        #b9b1a4 ${pct(d)},
+        #f3efe7 ${pct(d + r * 0.35)},
+        #e9e4da ${pct(d + r * 0.75)},
+        #c8c0b3 ${pct(d + r)},
+        rgba(0, 0, 0, 0.32) ${pct(d + r)},
+        rgba(0, 0, 0, 0) ${pct(d + r + s2)})`;
+    }
+    const tween = gsap.to(state, {
+      p: 1,
+      duration: PASTE_TIME,
+      ease: "power2.inOut",
+      onUpdate: render,
+      onComplete() {
+        img.style.clipPath = "";
+        curl.style.display = "none";
+      },
+    });
+    render();
+    pastes.set(name, tween);
+  }
+
   function hideName(name) {
+    hidePaste(name);
     const inner = name.firstElementChild;
     inner.style.visibility = "hidden";
     inner.style.filter = "none";
@@ -199,6 +293,7 @@
     const glyphs = chars.map((c) => c.firstElementChild);
     entrances.get(name)?.kill();
     restName(name);
+    playPaste(name);
 
     // Resting geometry: each letter's width and centre (0..1 of the name).
     const widths = chars.map((c) => c.offsetWidth);
