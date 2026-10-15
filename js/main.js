@@ -3,6 +3,9 @@
   // melt into the wide sans during the entrance. Set to false to go back
   // to sans only.
   const MORPH_FROM_SERIF = true;
+  // Shelved: the logo ring rolls right and back like a wheel instead of
+  // turning in place. Set to true to bring it back.
+  const LOGO_ROLL = false;
 
   const bikes = window.BIKES || [];
   const archive = document.getElementById("archive");
@@ -145,7 +148,9 @@
   // (the outer edge of the lettering), so it rolls without slipping.
   const logo = document.querySelector(".topbar__logo");
   const nav = document.querySelector(".topbar__nav");
+  if (LOGO_ROLL) document.querySelector(".topbar").classList.add("topbar--roll");
   function layoutRoll() {
+    if (!LOGO_ROLL) return;
     const size = logo.offsetWidth;
     const inset = parseFloat(getComputedStyle(root).getPropertyValue("--ring-inset")) || 0;
     const radius = size * (0.5 - inset);

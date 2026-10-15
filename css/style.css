@@ -92,16 +92,15 @@ ul {
 }
 
 .topbar__logo {
-  /* The ring hangs below the bar, top left, and rolls to the right and
-     back (main.js sets the distance --roll-d, the matching turn --roll-a
-     and the duration --roll-t). Both use the same timing, so the ring
-     always turns exactly as far as it travels, like a wheel. */
+  /* The ring hangs below the bar, top left. When rolling (shelved, see
+     .topbar--roll), main.js sets the distance --roll-d, the matching turn
+     --roll-a and the duration --roll-t; both use the same timing, so the
+     ring turns exactly as far as it travels, like a wheel. */
   position: absolute;
   top: 10px;
   left: var(--gutter);
   width: var(--logo-size);
   height: var(--logo-size);
-  animation: logo-roll var(--roll-t, 10s) var(--roll-ease) infinite alternate;
 }
 
 .logo-ring {
@@ -113,6 +112,23 @@ ul {
   font-family: var(--font);
   font-size: 15px;
   font-weight: 500;
+  /* Turns slowly in place. */
+  animation: logo-spin 30s linear infinite;
+}
+
+@keyframes logo-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Shelved: the ring rolls to the right and back like a wheel. Switched
+   on with LOGO_ROLL in main.js, which adds .topbar--roll. */
+.topbar--roll .topbar__logo {
+  animation: logo-roll var(--roll-t, 10s) var(--roll-ease) infinite alternate;
+}
+
+.topbar--roll .logo-ring {
   animation: logo-turn var(--roll-t, 10s) var(--roll-ease) infinite alternate;
 }
 
@@ -486,7 +502,8 @@ ul {
   inset: 0;
   z-index: 25;
   overflow-y: auto;
-  padding: calc(var(--topbar-h) + 24px) var(--gutter) 48px;
+  /* Starts below the ring (112px; 84px on phones). */
+  padding: calc(10px + var(--info-ring, 112px) + 28px) var(--gutter) 48px;
   background: var(--bg);
   opacity: 0;
   visibility: hidden;
@@ -579,9 +596,8 @@ ul {
     display: none;
   }
 
-  /* The manifesto text starts below the ring. */
   .info {
-    padding-top: calc(10px + 84px + 28px);
+    --info-ring: 84px;
   }
 
   /* The list: a full-screen overlay, "close" fixed at the top centre,
@@ -651,7 +667,9 @@ ul {
 
 @media (prefers-reduced-motion: reduce) {
   .topbar__logo,
-  .logo-ring {
+  .logo-ring,
+  .topbar--roll .topbar__logo,
+  .topbar--roll .logo-ring {
     animation: none;
   }
 
