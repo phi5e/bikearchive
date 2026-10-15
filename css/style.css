@@ -80,6 +80,7 @@ ul {
 --------------------------------------------- */
 
 .topbar {
+  --logo-size: 112px;
   position: fixed;
   inset: 0 0 auto 0;
   z-index: 30;
@@ -91,12 +92,16 @@ ul {
 }
 
 .topbar__logo {
-  /* The ring hangs below the bar, top left. */
+  /* The ring hangs below the bar, top left, and rolls to the right and
+     back (main.js sets the distance --roll-d, the matching turn --roll-a
+     and the duration --roll-t). Both use the same timing, so the ring
+     always turns exactly as far as it travels, like a wheel. */
   position: absolute;
   top: 10px;
   left: var(--gutter);
-  width: var(--logo-size, 112px);
-  height: var(--logo-size, 112px);
+  width: var(--logo-size);
+  height: var(--logo-size);
+  animation: logo-roll var(--roll-t, 10s) var(--roll-ease) infinite alternate;
 }
 
 .logo-ring {
@@ -108,25 +113,55 @@ ul {
   font-family: var(--font);
   font-size: 15px;
   font-weight: 500;
-  animation: logo-spin 30s linear infinite;
+  animation: logo-turn var(--roll-t, 10s) var(--roll-ease) infinite alternate;
 }
 
-@keyframes logo-spin {
+:root {
+  --roll-ease: cubic-bezier(0.45, 0, 0.55, 1);
+  /* The letters' outer edge sits this far inside the ring's box. */
+  --ring-inset: 0.03;
+}
+
+@keyframes logo-roll {
   to {
-    transform: rotate(360deg);
+    transform: translateX(var(--roll-d, 0px));
   }
+}
+
+@keyframes logo-turn {
+  to {
+    transform: rotate(var(--roll-a, 0deg));
+  }
+}
+
+/* Right column, as tall as the ring's lettering: "manifesto" at the
+   top, "view list" at the bottom. The words are trimmed to their cap
+   height so the edges line up with the letters, not the line box. */
+.topbar__nav {
+  position: absolute;
+  top: calc(10px + var(--logo-size) * var(--ring-inset));
+  right: var(--gutter);
+  height: calc(var(--logo-size) * (1 - 2 * var(--ring-inset)));
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.topbar__info,
+.list-toggle {
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-box: trim-both cap alphabetic;
 }
 
 @media (max-width: 600px) {
-  .topbar__logo {
+  .topbar {
     --logo-size: 84px;
   }
-}
-
-.topbar__info {
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
 }
 
 /* ---------------------------------------------
@@ -219,7 +254,7 @@ ul {
   display: inline-block;
   white-space: pre;
   transform-origin: 0 100%;
-  clip-path: inset(-50% 0 -50% 0);
+  clip-path: inset(-100% 0 -100% 0);
   will-change: transform;
 }
 
@@ -264,30 +299,23 @@ ul {
 }
 
 /* ---------------------------------------------
-   "view list" — left, vertically centered. Both
+   "view list" — top right under "manifesto". Both
    words share one grid cell and slide past each
    other in step with the list panel.
 --------------------------------------------- */
 
 .list-toggle {
-  position: fixed;
-  top: 50%;
-  left: max(var(--gutter), 24px);
-  z-index: 20;
   display: inline-grid;
+  /* Each word spans the whole cell, so sliding by 100% clears it. */
+  justify-items: stretch;
   overflow: hidden;
   padding: 0;
   background: none;
   border: 0;
   color: var(--ink);
-  font-family: var(--font-sans);
-  font-size: var(--toggle-size);
-  font-weight: 400;
-  line-height: 1.3;
   white-space: nowrap;
-  text-align: left;
-  transform: translate(0, -50%);
-  transition: transform var(--slide), opacity 0.25s var(--ease-out);
+  text-align: right;
+  transition: opacity 0.25s var(--ease-out);
 }
 
 .list-toggle:hover {
@@ -308,10 +336,6 @@ ul {
   transform: translateX(100%);
 }
 
-.is-list-open .list-toggle {
-  transform: translate(-20px, -50%);
-}
-
 .is-list-open .list-toggle__word[data-word="open"] {
   transform: translateX(-100%);
 }
@@ -321,9 +345,9 @@ ul {
 }
 
 /* ---------------------------------------------
-   List — plain names right next to the toggle,
-   centred on its line with names above and below,
-   feathered at the top and bottom.
+   List — plain names at the left edge, centred on
+   the screen's middle line with names above and
+   below, feathered at the top and bottom.
 --------------------------------------------- */
 
 .bike-list {
@@ -332,7 +356,7 @@ ul {
      main.js). The padding lets the first and last names reach the line. */
   top: calc(50% - var(--list-half, 200px));
   height: calc(var(--list-half, 200px) * 2);
-  left: calc(max(var(--gutter), 24px) - 20px + var(--toggle-w, 90px) + 24px);
+  left: var(--gutter);
   right: var(--gutter);
   z-index: 15;
   overflow-y: auto;
@@ -455,11 +479,14 @@ ul {
   /* Names at 60% of the desktop size (main.js), wrapping between words. */
   .bike__name {
     white-space: normal;
-    line-height: 1;
+    line-height: 0.5;
+    /* The caps reach above the squeezed first line. */
+    padding-top: 0.3em;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .topbar__logo,
   .logo-ring {
     animation: none;
   }

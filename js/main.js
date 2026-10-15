@@ -114,9 +114,25 @@
   // centred on the toggle's line: it reaches as far up as down, limited
   // by the menu above and the tallest caption (year + big name) below.
   const root = document.documentElement;
+  // The ring rolls from its spot towards the right-hand words and back,
+  // stopping 40% short of them. Its turn is the distance over its radius
+  // (the outer edge of the lettering), so it rolls without slipping.
+  const logo = document.querySelector(".topbar__logo");
+  const nav = document.querySelector(".topbar__nav");
+  function layoutRoll() {
+    const size = logo.offsetWidth;
+    const inset = parseFloat(getComputedStyle(root).getPropertyValue("--ring-inset")) || 0;
+    const radius = size * (0.5 - inset);
+    const gap = nav.getBoundingClientRect().left - (logo.offsetLeft + size);
+    const distance = Math.max(0, gap * 0.6);
+    logo.style.setProperty("--roll-d", `${distance.toFixed(1)}px`);
+    logo.style.setProperty("--roll-a", `${((distance / radius) * 180 / Math.PI).toFixed(2)}deg`);
+    // About 70px per second on average, whatever the screen width.
+    logo.style.setProperty("--roll-t", `${Math.max(2.5, distance / 70).toFixed(2)}s`);
+  }
   function layout() {
     fitNames();
-    root.style.setProperty("--toggle-w", `${toggle.offsetWidth}px`);
+    layoutRoll();
     const captions = Array.from(document.querySelectorAll(".bike__caption"));
     const tallest = Math.max(0, ...captions.map((c) => c.offsetHeight));
     const gutter = captions[0] ? parseFloat(getComputedStyle(captions[0]).bottom) : 0;

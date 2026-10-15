@@ -22,13 +22,16 @@
         </text>
       </svg>
     </a>
-    <a href="#manifesto" class="topbar__info" id="info-toggle" aria-controls="info" aria-expanded="false">manifesto</a>
+    <!-- Right column: "manifesto" level with the top of the ring,
+         "view list" level with its bottom. -->
+    <nav class="topbar__nav">
+      <a href="#manifesto" class="topbar__info" id="info-toggle" aria-controls="info" aria-expanded="false">manifesto</a>
+      <button type="button" class="list-toggle" id="list-toggle" aria-controls="bike-list" aria-expanded="false">
+        <span class="list-toggle__word" data-word="open">view list</span>
+        <span class="list-toggle__word" data-word="close" aria-hidden="true">close list</span>
+      </button>
+    </nav>
   </header>
-
-  <button type="button" class="list-toggle" id="list-toggle" aria-controls="bike-list" aria-expanded="false">
-    <span class="list-toggle__word" data-word="open">view list</span>
-    <span class="list-toggle__word" data-word="close" aria-hidden="true">close list</span>
-  </button>
 
   <nav class="bike-list" id="bike-list" aria-label="Alle Räder">
     <ul class="bike-list__items" id="bike-list-items"></ul>
