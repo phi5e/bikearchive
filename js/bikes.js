@@ -23,4 +23,5 @@ window.BIKES = [
   { name: "Tommasini Prestige", year: "1992", image: "posters/1992_Tommasini_Prestige.svg" },
   { name: "Daccordi Griffe", year: "1993", image: "posters/1993_Daccordi_Griffe.svg" },
   { name: "Mash Steel Fixed", year: "2018", image: "posters/2018_Mash_Steel_Fixed.jpg" },
+  { name: "Kuwahara", year: "2026", image: "posters/2026_Kuwahara.jpg" },
 ];
