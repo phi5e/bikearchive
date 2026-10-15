@@ -36,6 +36,9 @@
     const inner = document.createElement("span");
     inner.className = "bike__name-inner";
     inner.setAttribute("aria-hidden", "true");
+    // Letters are grouped per word, so a wrapped name (phones) only breaks
+    // between words; spaces stay letters of their own.
+    let word = null;
     Array.from(bike.name).forEach((ch) => {
       const c = document.createElement("span");
       c.className = "bike__char";
@@ -52,7 +55,17 @@
         g.textContent = ch;
       }
       c.appendChild(g);
-      inner.appendChild(c);
+      if (ch === " ") {
+        word = null;
+        inner.appendChild(c);
+      } else {
+        if (!word) {
+          word = document.createElement("span");
+          word.className = "bike__word";
+          inner.appendChild(word);
+        }
+        word.appendChild(c);
+      }
     });
     name.appendChild(inner);
     archive.appendChild(section);
@@ -70,8 +83,23 @@
   // above the CSS cap (160px). Measured on the inner span, whose
   // offsetWidth ignores the letters' wave transforms.
   const names = Array.from(document.querySelectorAll(".bike__name"));
+  const phoneQuery = window.matchMedia("(max-width: 600px)");
+  const isPhone = () => phoneQuery.matches;
   function fitNames() {
     const cap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--name-max")) || 160;
+    if (isPhone()) {
+      // Phones: 60% of the desktop cap, wrapping between words; only a
+      // single word wider than the screen makes the name smaller.
+      const size = cap * 0.6;
+      names.forEach((el) => {
+        el.style.fontSize = `${size}px`;
+        const available = el.parentElement.clientWidth;
+        const widest = Math.max(1, ...Array.from(el.querySelectorAll(".bike__word")).map((w) => w.offsetWidth));
+        const fitted = widest > available ? size * (available / widest) : size;
+        el.style.fontSize = `${Math.floor(fitted * 100) / 100}px`;
+      });
+      return;
+    }
     names.forEach((el) => {
       el.style.fontSize = `${cap}px`;
       const available = el.parentElement.clientWidth;
@@ -193,7 +221,7 @@
     inner.style.visibility = "hidden";
     inner.style.filter = "none";
     if (MORPH_FROM_SERIF) setMorph(name, 0);
-    Array.from(inner.children).forEach((c) => {
+    inner.querySelectorAll(".bike__char").forEach((c) => {
       c.style.transform = "";
       c.firstElementChild.style.transform = "translate3d(110%, 0, 0)";
     });
@@ -204,7 +232,7 @@
     inner.style.visibility = "";
     inner.style.filter = "none";
     if (MORPH_FROM_SERIF) setMorph(name, null);
-    Array.from(inner.children).forEach((c) => {
+    inner.querySelectorAll(".bike__char").forEach((c) => {
       c.style.transform = "";
       c.firstElementChild.style.transform = "";
     });
@@ -212,7 +240,7 @@
 
   function playName(name) {
     const inner = name.firstElementChild;
-    const chars = Array.from(inner.children);
+    const chars = Array.from(inner.querySelectorAll(".bike__char"));
     const glyphs = chars.map((c) => c.firstElementChild);
     entrances.get(name)?.kill();
     restName(name);
@@ -263,7 +291,8 @@
       const life = Math.min(Math.max(t / wave, 0), 1);
       const centre = 1 + LEAD - span * legEase(life);
       // The tail is stretched (life ** 0.8) so the wave dies out slowly.
-      const amp = 2.8 * Math.sin(Math.PI * life ** 0.8) ** 2;
+      // No wave on phones: it assumes the name is one line.
+      const amp = isPhone() ? 0 : 2.8 * Math.sin(Math.PI * life ** 0.8) ** 2;
 
       // Stretch under the wave, then rescale so the widths still add up
       // to the resting width: the letters elsewhere get squeezed.
