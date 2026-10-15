@@ -2,6 +2,9 @@
    Don't edit by hand: add, rename or delete images in posters/ instead,
    named <year>_<Name_With_Underscores>.<ext>, e.g. 2018_Mash_Steel_Fixed.jpg. */
 window.BIKES = [
+  { name: "GT Karakoram", year: "1984", image: "posters/1984_GT_Karakoram.jpg" },
+  { name: "Mash Steel Fixed", year: "2018", image: "posters/2018_Mash_Steel_Fixed.jpg" },
+  { name: "Kuwahara", year: "2026", image: "posters/2026_Kuwahara.jpg" },
   { name: "Faema Merckx", year: "1970", image: "posters/1970_Faema_Merckx.svg" },
   { name: "Masi Gran Criterium", year: "1972", image: "posters/1972_Masi_Gran_Criterium.svg" },
   { name: "Cinelli Supercorsa", year: "1974", image: "posters/1974_Cinelli_Supercorsa.svg" },
@@ -12,7 +15,6 @@ window.BIKES = [
   { name: "Gazelle Champion Mondial", year: "1982", image: "posters/1982_Gazelle_Champion_Mondial.svg" },
   { name: "Gios Torino Super Record", year: "1983", image: "posters/1983_Gios_Torino_Super_Record.svg" },
   { name: "Alan Super Record", year: "1984", image: "posters/1984_Alan_Super_Record.svg" },
-  { name: "GT Karakoram", year: "1984", image: "posters/1984_GT_Karakoram.jpg" },
   { name: "Basso Gap", year: "1985", image: "posters/1985_Basso_Gap.svg" },
   { name: "Moser Leader AX", year: "1986", image: "posters/1986_Moser_Leader_AX.svg" },
   { name: "Pinarello Montello", year: "1986", image: "posters/1986_Pinarello_Montello.svg" },
@@ -22,6 +24,4 @@ window.BIKES = [
   { name: "Concorde Aquila", year: "1991", image: "posters/1991_Concorde_Aquila.svg" },
   { name: "Tommasini Prestige", year: "1992", image: "posters/1992_Tommasini_Prestige.svg" },
   { name: "Daccordi Griffe", year: "1993", image: "posters/1993_Daccordi_Griffe.svg" },
-  { name: "Mash Steel Fixed", year: "2018", image: "posters/2018_Mash_Steel_Fixed.jpg" },
-  { name: "Kuwahara", year: "2026", image: "posters/2026_Kuwahara.jpg" },
 ];

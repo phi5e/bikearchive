@@ -33,8 +33,8 @@ Auf GitHub: Ordner `posters` öffnen → „Add file“ → „Upload files“ �
 Bild reinziehen → „Commit changes“. Eine GitHub Action
 (`.github/workflows/bikes.yml`) baut danach `js/bikes.js` neu; nach etwa
 einer Minute ist das Rad in der Seite und in der Liste. Umbenennen oder
-Löschen einer Datei wirkt genauso. Sortiert wird nach Jahr (älteste
-zuerst). Dateien, die nicht dem Muster folgen, werden ignoriert.
+Löschen einer Datei wirkt genauso. Echte Plakate stehen vorne, die
+`.svg`-Platzhalter dahinter; innerhalb davon nach Jahr (älteste zuerst). Dateien, die nicht dem Muster folgen, werden ignoriert.
 
 Die `.svg`-Dateien in `posters/` sind Platzhalter; einfach löschen, wenn
 die echten Plakate da sind. Lokal neu bauen: `node scripts/build-bikes.mjs`.
