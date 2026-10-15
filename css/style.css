@@ -86,32 +86,47 @@ ul {
   height: var(--topbar-h);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding: 0 var(--gutter);
 }
 
 .topbar__logo {
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  /* The ring hangs below the bar, top left. */
+  position: absolute;
+  top: 10px;
+  left: var(--gutter);
+  width: var(--logo-size, 112px);
+  height: var(--logo-size, 112px);
+}
+
+.logo-ring {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: currentColor;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 500;
+  animation: logo-spin 30s linear infinite;
+}
+
+@keyframes logo-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 600px) {
+  .topbar__logo {
+    --logo-size: 84px;
+  }
 }
 
 .topbar__info {
   font-size: 14px;
   font-weight: 600;
   letter-spacing: -0.01em;
-}
-
-/* Centered on the page, independent of the logo's width. */
-.topbar__title {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 1;
-  white-space: nowrap;
 }
 
 /* ---------------------------------------------
@@ -419,6 +434,10 @@ ul {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .logo-ring {
+    animation: none;
+  }
+
   html {
     scroll-behavior: auto;
   }
