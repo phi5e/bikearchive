@@ -423,6 +423,59 @@ ul {
   display: none;
 }
 
+.bike-list__close,
+.lightbox__close {
+  position: absolute;
+  top: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 16px;
+  margin-top: -12px;
+  background: none;
+  border: 0;
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-box: trim-both cap alphabetic;
+}
+
+/* ---------------------------------------------
+   Lightbox — tapping a poster shows the whole
+   image, uncropped, with "close" at the top centre.
+--------------------------------------------- */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: var(--bg);
+  overscroll-behavior: contain;
+  touch-action: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.45s var(--ease-out), visibility 0s linear 0.45s;
+}
+
+.is-lightbox-open .lightbox {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.45s var(--ease-out), visibility 0s;
+}
+
+.lightbox__img {
+  position: absolute;
+  top: 76px;
+  bottom: var(--gutter);
+  left: var(--gutter);
+  right: var(--gutter);
+  width: calc(100% - 2 * var(--gutter));
+  height: calc(100% - 76px - var(--gutter));
+  object-fit: contain;
+}
+
 /* ---------------------------------------------
    Info — the garage text over the whole screen,
    in the serif, full width between the gutters.
@@ -496,12 +549,34 @@ ul {
     line-height: 0.8;
   }
 
-  /* "view list" sits under "manifesto", top right. */
+  /* "view list" sits under "manifesto", top right, both centred on
+     each other. No swap to "close list" here: the overlay has its own
+     "close". */
+  .topbar__nav {
+    align-items: center;
+    gap: 18px;
+  }
+
   .list-toggle,
   .is-list-open .list-toggle {
     position: static;
     transform: none;
-    text-align: right;
+    text-align: center;
+  }
+
+  .list-toggle__word,
+  .is-list-open .list-toggle__word[data-word="open"] {
+    transform: none;
+    transition: none;
+  }
+
+  .list-toggle__word[data-word="close"] {
+    display: none;
+  }
+
+  /* The manifesto text starts below the ring. */
+  .info {
+    padding-top: calc(10px + 84px + 28px);
   }
 
   /* The list: a full-screen overlay, "close" fixed at the top centre,
@@ -531,25 +606,11 @@ ul {
 
   .bike-list__close {
     display: block;
-    position: absolute;
-    top: calc(10px + var(--logo-size, 84px) * var(--ring-inset));
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 0;
-    background: none;
-    border: 0;
-    color: var(--ink);
-    font-family: var(--font);
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1;
-    letter-spacing: -0.01em;
-    text-box: trim-both cap alphabetic;
   }
 
   .bike-list__items {
     position: absolute;
-    top: 64px;
+    top: 76px;
     bottom: 0;
     left: var(--gutter);
     right: var(--gutter);
@@ -568,8 +629,10 @@ ul {
     transform: translateY(12px);
   }
 
+  /* Roomy rows, easy to hit with a finger. */
   .bike-list__item a {
     font-size: 20px;
+    padding: 9px 0;
   }
 }
 
@@ -595,6 +658,7 @@ ul {
   .list-toggle__word,
   .bike-list,
   .bike-list__item,
+  .lightbox,
   .info {
     transition-duration: 0s;
     transition-delay: 0s;

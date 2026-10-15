@@ -495,7 +495,7 @@
   });
   document.getElementById("list-close").addEventListener("click", () => setOpen(false));
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") { setOpen(false); setInfo(false); }
+    if (e.key === "Escape") { setOpen(false); setInfo(false); setLightbox(null); }
   });
 
   // manifesto ↔ close: the garage text over the whole screen.
@@ -528,6 +528,24 @@
     if (isPhone()) setTimeout(go, 450);
     else go();
   });
+
+  // Lightbox: tap a poster to see the whole image; "close" or a tap
+  // anywhere on it closes it again.
+  const lightbox = document.getElementById("lightbox");
+  const lightboxImg = document.getElementById("lightbox-img");
+  function setLightbox(poster) {
+    if (poster) {
+      lightboxImg.src = poster.currentSrc || poster.src;
+      lightboxImg.alt = poster.alt;
+    }
+    document.body.classList.toggle("is-lightbox-open", !!poster);
+    lightbox.setAttribute("aria-hidden", String(!poster));
+  }
+  archive.addEventListener("click", (e) => {
+    const section = e.target.closest(".bike");
+    if (section) setLightbox(section.querySelector(".bike__poster"));
+  });
+  lightbox.addEventListener("click", () => setLightbox(null));
 
   // Mark the poster currently on screen in the list.
   const byTarget = new Map(Array.from(listItems.children).map((li) => [li.dataset.target, li]));
