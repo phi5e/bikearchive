@@ -552,9 +552,14 @@ ul {
   /* "view list" sits under "manifesto", top right, both centred on
      each other. No swap to "close list" here: the overlay has its own
      "close". */
+  /* The two words span the ring's height, each pulled 20% of the
+     ring inwards from its top and bottom edge. */
   .topbar__nav {
+    top: calc(10px + var(--logo-size) * 0.2);
+    height: calc(var(--logo-size) * 0.6);
     align-items: center;
-    gap: 18px;
+    justify-content: space-between;
+    gap: 0;
   }
 
   .list-toggle,
