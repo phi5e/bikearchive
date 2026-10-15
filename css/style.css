@@ -202,6 +202,8 @@ ul {
 .bike__word {
   display: inline-block;
   white-space: nowrap;
+  /* Top-aligned, so the letter boxes don't push the lines apart. */
+  vertical-align: top;
 }
 
 /* Holds the letters main.js animates; the outer .bike__name keeps the
@@ -453,7 +455,7 @@ ul {
   /* Names at 60% of the desktop size (main.js), wrapping between words. */
   .bike__name {
     white-space: normal;
-    line-height: 1.1;
+    line-height: 1;
   }
 }
 

@@ -37,9 +37,16 @@
     inner.className = "bike__name-inner";
     inner.setAttribute("aria-hidden", "true");
     // Letters are grouped per word, so a wrapped name (phones) only breaks
-    // between words; spaces stay letters of their own.
+    // between words.
     let word = null;
     Array.from(bike.name).forEach((ch) => {
+      if (ch === " ") {
+        // A plain space between words: it disappears at a line break
+        // instead of indenting the next line.
+        word = null;
+        inner.appendChild(document.createTextNode(" "));
+        return;
+      }
       const c = document.createElement("span");
       c.className = "bike__char";
       const g = document.createElement("span");
@@ -55,17 +62,12 @@
         g.textContent = ch;
       }
       c.appendChild(g);
-      if (ch === " ") {
-        word = null;
-        inner.appendChild(c);
-      } else {
-        if (!word) {
-          word = document.createElement("span");
-          word.className = "bike__word";
-          inner.appendChild(word);
-        }
-        word.appendChild(c);
+      if (!word) {
+        word = document.createElement("span");
+        word.className = "bike__word";
+        inner.appendChild(word);
       }
+      word.appendChild(c);
     });
     name.appendChild(inner);
     archive.appendChild(section);
