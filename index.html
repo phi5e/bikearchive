@@ -22,8 +22,8 @@
         </text>
       </svg>
     </a>
-    <!-- Right column: "manifesto" level with the top of the ring,
-         "view list" level with its bottom. -->
+    <!-- Right column, level with the top of the ring. "view list" sits
+         under "manifesto" on phones; elsewhere it is fixed at the left. -->
     <nav class="topbar__nav">
       <a href="#manifesto" class="topbar__info" id="info-toggle" aria-controls="info" aria-expanded="false">manifesto</a>
       <button type="button" class="list-toggle" id="list-toggle" aria-controls="bike-list" aria-expanded="false">
@@ -34,6 +34,8 @@
   </header>
 
   <nav class="bike-list" id="bike-list" aria-label="Alle Räder">
+    <!-- Phones only: the list is a full-screen overlay with this on top. -->
+    <button type="button" class="bike-list__close" id="list-close">close</button>
     <ul class="bike-list__items" id="bike-list-items"></ul>
   </nav>
 

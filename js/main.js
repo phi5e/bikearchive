@@ -87,6 +87,23 @@
   const names = Array.from(document.querySelectorAll(".bike__name"));
   const phoneQuery = window.matchMedia("(max-width: 600px)");
   const isPhone = () => phoneQuery.matches;
+  // Cap height, ascent and descent of the name face, as fractions of
+  // the font size (measured once, after the fonts have loaded).
+  let metrics = null;
+  function nameMetrics(el) {
+    if (metrics) return metrics;
+    const cs = getComputedStyle(el);
+    const ctx = document.createElement("canvas").getContext("2d");
+    ctx.font = `${cs.fontWeight} 100px ${cs.fontFamily}`;
+    const h = ctx.measureText("H");
+    const found = {
+      cap: h.actualBoundingBoxAscent / 100,
+      ascent: h.fontBoundingBoxAscent / 100,
+      descent: h.fontBoundingBoxDescent / 100,
+    };
+    if (document.fonts.status === "loaded") metrics = found;
+    return found;
+  }
   function fitNames() {
     const cap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--name-max")) || 160;
     if (isPhone()) {
@@ -97,12 +114,21 @@
         el.style.fontSize = `${size}px`;
         const available = el.parentElement.clientWidth;
         const widest = Math.max(1, ...Array.from(el.querySelectorAll(".bike__word")).map((w) => w.offsetWidth));
-        const fitted = widest > available ? size * (available / widest) : size;
-        el.style.fontSize = `${Math.floor(fitted * 100) / 100}px`;
+        const fitted = Math.floor((widest > available ? size * (available / widest) : size) * 100) / 100;
+        el.style.fontSize = `${fitted}px`;
+        // Caps of one line end 5px above the next line's caps.
+        const m = nameMetrics(el);
+        const lineHeight = m.cap * fitted + 5;
+        el.style.lineHeight = `${lineHeight.toFixed(2)}px`;
+        // Where the first line's caps start inside its (squeezed) box.
+        const capTop = (lineHeight - (m.ascent + m.descent) * fitted) / 2 + (m.ascent - m.cap) * fitted;
+        el.style.paddingTop = capTop < 0 ? `${Math.ceil(-capTop)}px` : "";
       });
       return;
     }
     names.forEach((el) => {
+      el.style.lineHeight = "";
+      el.style.paddingTop = "";
       el.style.fontSize = `${cap}px`;
       const available = el.parentElement.clientWidth;
       const needed = el.firstElementChild.offsetWidth;
@@ -133,6 +159,7 @@
   function layout() {
     fitNames();
     layoutRoll();
+    root.style.setProperty("--toggle-w", `${toggle.offsetWidth}px`);
     const captions = Array.from(document.querySelectorAll(".bike__caption"));
     const tallest = Math.max(0, ...captions.map((c) => c.offsetHeight));
     const gutter = captions[0] ? parseFloat(getComputedStyle(captions[0]).bottom) : 0;
@@ -452,7 +479,9 @@
   // scrolled onto the toggle's line, with the others above and below.
   const listNav = document.getElementById("bike-list");
   function setOpen(open) {
-    if (open) {
+    if (open && isPhone()) {
+      listItems.scrollTop = 0;
+    } else if (open) {
       const li = listItems.querySelector(".is-current") || listItems.children[Math.floor(listItems.children.length / 2)];
       if (li) listNav.scrollTop = li.offsetTop + li.offsetHeight / 2 - listNav.clientHeight / 2;
     }
@@ -464,6 +493,7 @@
   toggle.addEventListener("click", () => {
     setOpen(!document.body.classList.contains("is-list-open"));
   });
+  document.getElementById("list-close").addEventListener("click", () => setOpen(false));
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") { setOpen(false); setInfo(false); }
   });
@@ -487,10 +517,16 @@
     const li = e.target.closest(".bike-list__item");
     if (!li) return;
     e.preventDefault();
-    deferNames();
-    document.getElementById(li.dataset.target).scrollIntoView({ behavior: "smooth" });
+    const target = document.getElementById(li.dataset.target);
     history.replaceState(null, "", `#${li.dataset.target}`);
     setOpen(false);
+    const go = () => {
+      deferNames();
+      target.scrollIntoView({ behavior: "smooth" });
+    };
+    // Phones: let the overlay fade out first, then scroll.
+    if (isPhone()) setTimeout(go, 450);
+    else go();
   });
 
   // Mark the poster currently on screen in the list.

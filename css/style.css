@@ -134,18 +134,15 @@ ul {
   }
 }
 
-/* Right column, as tall as the ring's lettering: "manifesto" at the
-   top, "view list" at the bottom. The words are trimmed to their cap
-   height so the edges line up with the letters, not the line box. */
+/* Right column, level with the top of the ring's lettering. */
 .topbar__nav {
   position: absolute;
   top: calc(10px + var(--logo-size) * var(--ring-inset));
   right: var(--gutter);
-  height: calc(var(--logo-size) * (1 - 2 * var(--ring-inset)));
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   align-items: flex-end;
+  gap: 10px;
 }
 
 .topbar__info,
@@ -305,6 +302,11 @@ ul {
 --------------------------------------------- */
 
 .list-toggle {
+  /* Tablet and desktop: left, vertically centred (phones: see below). */
+  position: fixed;
+  top: 50%;
+  left: max(var(--gutter), 24px);
+  z-index: 20;
   display: inline-grid;
   /* Each word spans the whole cell, so sliding by 100% clears it. */
   justify-items: stretch;
@@ -314,8 +316,13 @@ ul {
   border: 0;
   color: var(--ink);
   white-space: nowrap;
-  text-align: right;
-  transition: opacity 0.25s var(--ease-out);
+  text-align: left;
+  transform: translate(0, -50%);
+  transition: transform var(--slide), opacity 0.25s var(--ease-out);
+}
+
+.is-list-open .list-toggle {
+  transform: translate(-20px, -50%);
 }
 
 .list-toggle:hover {
@@ -345,9 +352,10 @@ ul {
 }
 
 /* ---------------------------------------------
-   List — plain names at the left edge, centred on
-   the screen's middle line with names above and
-   below, feathered at the top and bottom.
+   List — plain names right next to the toggle,
+   centred on its line with names above and below,
+   feathered at the top and bottom. Phones: a
+   full-screen overlay (see the media query below).
 --------------------------------------------- */
 
 .bike-list {
@@ -356,7 +364,7 @@ ul {
      main.js). The padding lets the first and last names reach the line. */
   top: calc(50% - var(--list-half, 200px));
   height: calc(var(--list-half, 200px) * 2);
-  left: var(--gutter);
+  left: calc(max(var(--gutter), 24px) - 20px + var(--toggle-w, 90px) + 24px);
   right: var(--gutter);
   z-index: 15;
   overflow-y: auto;
@@ -409,6 +417,10 @@ ul {
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
+}
+
+.bike-list__close {
+  display: none;
 }
 
 /* ---------------------------------------------
@@ -476,12 +488,96 @@ ul {
     object-fit: cover;
   }
 
-  /* Names at 60% of the desktop size (main.js), wrapping between words. */
+  /* Names at 60% of the desktop size, wrapping between words. main.js
+     sets the line height so the caps of one line end 5px above the next
+     (and pads the top so the first line's caps aren't cut off). */
   .bike__name {
     white-space: normal;
-    line-height: 0.5;
-    /* The caps reach above the squeezed first line. */
-    padding-top: 0.3em;
+    line-height: 0.8;
+  }
+
+  /* "view list" sits under "manifesto", top right. */
+  .list-toggle,
+  .is-list-open .list-toggle {
+    position: static;
+    transform: none;
+    text-align: right;
+  }
+
+  /* The list: a full-screen overlay, "close" fixed at the top centre,
+     the names scrolling under a feather below it. */
+  .bike-list,
+  .is-list-open .bike-list {
+    inset: 0;
+    height: auto;
+    z-index: 40;
+    padding: 0;
+    overflow: hidden;
+    background: var(--bg);
+    text-align: center;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .bike-list {
+    opacity: 0;
+    transition: opacity 0.45s var(--ease-out), visibility 0s linear 0.45s;
+  }
+
+  .is-list-open .bike-list {
+    opacity: 1;
+    transition: opacity 0.45s var(--ease-out), visibility 0s;
+  }
+
+  .bike-list__close {
+    display: block;
+    position: absolute;
+    top: calc(10px + var(--logo-size, 84px) * var(--ring-inset));
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0;
+    background: none;
+    border: 0;
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    text-box: trim-both cap alphabetic;
+  }
+
+  .bike-list__items {
+    position: absolute;
+    top: 64px;
+    bottom: 0;
+    left: var(--gutter);
+    right: var(--gutter);
+    overflow-y: auto;
+    padding: 40px 0 45vh;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 48px, #000 calc(100% - 96px), transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 48px, #000 calc(100% - 96px), transparent);
+  }
+
+  .bike-list__items::-webkit-scrollbar {
+    display: none;
+  }
+
+  .bike-list__item {
+    transform: translateY(12px);
+  }
+
+  .bike-list__item a {
+    font-size: 20px;
+  }
+}
+
+/* The overlay sits above the menu bar, so its "close" uses the same
+   ring size as the bar. */
+@media (max-width: 600px) {
+  .bike-list {
+    --logo-size: 84px;
   }
 }
 
