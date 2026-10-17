@@ -100,7 +100,13 @@ export function setupScroll({ scroller, records, entrances }) {
     else if (touches === 0 && !glide) scroller.classList.remove("is-gliding");
     if (touches === 0) settleSoon();
   };
-  ["touchstart", "touchend", "touchcancel"].forEach((type) => scroller.addEventListener(type, onTouch, { passive: true }));
+  scroller.addEventListener("touchstart", onTouch, { passive: true });
+  // Lifting is heard on the whole window: a finger that rested on the menu
+  // would otherwise never be counted off and keep names from starting.
+  ["touchend", "touchcancel"].forEach((type) => window.addEventListener(type, onTouch, { passive: true }));
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) touches = 0;
+  });
   return {
     update,
     arm() {
