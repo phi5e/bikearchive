@@ -181,10 +181,10 @@ ul {
 /* ---------------------------------------------
    Posters — one per screen, snapping. The page
    itself scrolls, so phone browsers can shrink
-   their bars. Every poster is as tall as the screen
-   with the bars hidden (100lvh): that height never
-   changes while the bars come and go, so the snap
-   points stay put. Each poster is 80% of the screen
+   their bars. Every poster keeps one height
+   (--poster-h, layout.js) while the bars come and
+   go: the bars just lie on top, and the snap points
+   never move. Each poster is 80% of the screen
    height, centred between the menu and the bottom.
 --------------------------------------------- */
 
@@ -208,6 +208,7 @@ html.is-gliding {
   position: relative;
   height: 100vh;
   height: 100lvh;
+  height: var(--poster-h, 100lvh);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -266,10 +267,7 @@ html.is-gliding {
   position: absolute;
   left: var(--gutter);
   right: var(--gutter);
-  /* Above the phone browser's bottom bar while it is shown (--bar-gap,
-     layout.js), following it as it shrinks and grows. */
-  bottom: calc(var(--gutter) + var(--bar-gap, 0px));
-  transition: bottom 0.3s var(--ease-out);
+  bottom: var(--gutter);
   /* Above every poster, not just this section's. */
   z-index: 5;
   pointer-events: none;

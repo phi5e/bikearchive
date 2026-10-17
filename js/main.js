@@ -2,7 +2,7 @@
 
 import { buildArchive } from "./site/build.js";
 import { createEntrance } from "./site/entrance.js";
-import { barGap, createLayout } from "./site/layout.js";
+import { createLayout, sizePosters } from "./site/layout.js";
 import { reduceMotion, waitsForFinger } from "./site/media.js";
 import { setupOverlays } from "./site/overlays.js";
 import { setupScroll } from "./site/scroll.js";
@@ -17,8 +17,8 @@ const entrances = motion ? records.map((rec) => createEntrance(rec, blurDev)) : 
 entrances?.forEach((e) => e.hide());
 const stage = setupScroll({ records, entrances });
 setupOverlays({ records, stage, archive });
+sizePosters();
 layout();
-barGap();
 stage.update();
 document.fonts.ready.then(() => {
   layout();
@@ -28,10 +28,10 @@ document.fonts.ready.then(() => {
 // there only a new width needs the names fitted again.
 let width = innerWidth;
 window.addEventListener("resize", () => {
+  sizePosters();
   if (innerWidth !== width || !waitsForFinger()) {
     width = innerWidth;
     layout();
   }
-  barGap();
   stage.update();
 });

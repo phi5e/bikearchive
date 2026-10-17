@@ -2,6 +2,7 @@
 
 import { LOGO_ROLL } from "./config.js";
 import { fitNames } from "./fit.js";
+import { waitsForFinger } from "./media.js";
 
 const root = document.documentElement;
 const cssPx = (name, fallback) => parseFloat(getComputedStyle(root).getPropertyValue(name)) || fallback;
@@ -32,10 +33,50 @@ export function createLayout(records) {
   };
 }
 
-// How much of a poster the browser bars cover at the bottom right now
-// (posters are as tall as the screen without them). The names sit above.
-export function barGap() {
-  const poster = document.querySelector(".bike");
-  const gap = poster ? Math.max(0, poster.offsetHeight - innerHeight) : 0;
-  root.style.setProperty("--bar-gap", `${gap}px`);
+// Poster height in px. Phone browsers show and hide their bars while
+// scrolling, which changes the screen height (and in some browsers even
+// 100lvh). The posters ignore that and keep the tallest height seen at
+// this width, so the bars just lie on top of them and the snap points
+// never move. Only a new width (turning the phone) or, on a computer, a
+// resized window sizes them again.
+let probe = null;
+function largeScreen() {
+  if (!probe) {
+    probe = document.createElement("div");
+    probe.style.cssText = "position:fixed;top:0;left:0;width:0;height:100vh;height:100lvh;visibility:hidden;pointer-events:none";
+    document.body.appendChild(probe);
+  }
+  return probe.offsetHeight;
+}
+// The tallest height is remembered for the visit, so a reload doesn't
+// have to find it again (a browser can report it only once its bars hide).
+const remembered = (width) => {
+  try {
+    return Number(sessionStorage.getItem(`poster-h-${width}`)) || 0;
+  } catch {
+    return 0;
+  }
+};
+const remember = (width, height) => {
+  try {
+    sessionStorage.setItem(`poster-h-${width}`, String(height));
+  } catch {}
+};
+let posterH = 0;
+let posterW = 0;
+export function sizePosters() {
+  const touch = waitsForFinger();
+  const keep = touch && innerWidth === posterW;
+  const height = keep
+    ? Math.max(posterH, innerHeight)
+    : Math.max(innerHeight, touch ? Math.max(largeScreen(), remembered(innerWidth)) : 0);
+  posterW = innerWidth;
+  if (height === posterH) return;
+  if (touch) remember(innerWidth, height);
+  // Stay on the same poster when the height does change.
+  const page = document.scrollingElement || root;
+  const index = posterH ? Math.round(page.scrollTop / posterH) : 0;
+  posterH = height;
+  root.style.setProperty("--poster-h", `${height}px`);
+  if (index) page.scrollTop = index * height;
 }
