@@ -82,7 +82,8 @@ ul {
      the bar itself still scrolls the posters below. */
   pointer-events: none;
   position: fixed;
-  inset: 0 0 auto 0;
+  /* Below the phone's status bar (viewport-fit=cover in index.html). */
+  inset: env(safe-area-inset-top, 0px) 0 auto 0;
   z-index: 30;
   height: var(--topbar-h);
   display: flex;
@@ -589,6 +590,29 @@ ul {
   :root {
     --info-size: 28px;
     --list-size: 16px;
+  }
+
+  /* The posters reach under the browser's status and tool bars (Safari
+     paints those areas grey otherwise, since the page itself never
+     scrolls and so never hides them): the scroller is as tall as the
+     largest screen, and the name stays above the bottom bar. */
+  .archive {
+    bottom: auto;
+    height: 100vh;
+    height: 100lvh;
+  }
+
+  .bike__caption {
+    bottom: calc(var(--gutter) + 100lvh - 100svh);
+  }
+
+  /* Overlays cover the status bar too; their contents start below it.
+     (A transparent border, so the absolutely placed parts move as well.) */
+  .lightbox,
+  .info,
+  .bike-list,
+  .is-list-open .bike-list {
+    border-top: env(safe-area-inset-top, 0px) solid transparent;
   }
 
   /* Phones: every poster fills the whole screen, one per swipe. */
