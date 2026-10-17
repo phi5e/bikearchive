@@ -198,6 +198,12 @@ html.is-gliding {
   scroll-snap-type: none;
 }
 
+/* Focused (overlays.js) so the keys scroll the page; no ring for that. */
+.archive,
+.info {
+  outline: none;
+}
+
 .bike {
   position: relative;
   height: 100vh;
@@ -211,17 +217,15 @@ html.is-gliding {
   overflow-x: clip;
 }
 
-/* The page snaps to this, not to the poster: it starts where the poster
-   starts but is only as tall as the screen with the bars shown. A snap
-   target taller than the screen would let the page stop anywhere inside
-   it (that was the half-way stops while Safari's bar was out). */
+/* The page snaps to this, not to the poster: a thin line where the poster
+   starts. A snap target taller than the screen (the poster, while
+   Safari's bar is out) would let the page stop anywhere inside it. */
 .bike__snap {
   position: absolute;
   top: 0;
   left: 0;
   width: 1px;
-  height: 100vh;
-  height: 100svh;
+  height: 1px;
   scroll-snap-align: start;
   pointer-events: none;
 }

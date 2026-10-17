@@ -15,6 +15,8 @@ export function setupOverlays({ records, stage, archive }) {
   const lightbox = document.getElementById("lightbox");
   const lightboxImg = document.getElementById("lightbox-img");
   const isOpen = (name) => body.classList.contains(name);
+  // Keys go back to the page (not a hidden overlay) once one closes.
+  const refocus = () => archive.focus({ preventScroll: true });
   function setList(open) {
     if (open && isPhone()) {
       listItems.scrollTop = 0;
@@ -23,6 +25,7 @@ export function setupOverlays({ records, stage, archive }) {
       if (li) listNav.scrollTop = li.offsetTop + li.offsetHeight / 2 - listNav.clientHeight / 2;
     }
     body.classList.toggle("is-list-open", open);
+    if (!open) refocus();
     toggle.setAttribute("aria-expanded", String(open));
     openWord.setAttribute("aria-hidden", String(open));
     closeWord.setAttribute("aria-hidden", String(!open));
@@ -30,6 +33,9 @@ export function setupOverlays({ records, stage, archive }) {
   function setInfo(open) {
     if (open) setList(false);
     body.classList.toggle("is-info-open", open);
+    // Keys scroll the text while it is open.
+    if (open) info.focus({ preventScroll: true });
+    else refocus();
     infoToggle.textContent = open ? "close" : "manifesto";
     infoToggle.setAttribute("aria-expanded", String(open));
     info.setAttribute("aria-hidden", String(!open));
@@ -40,6 +46,7 @@ export function setupOverlays({ records, stage, archive }) {
       lightboxImg.alt = poster.alt;
     }
     body.classList.toggle("is-lightbox-open", !!poster);
+    if (!poster) refocus();
     lightbox.setAttribute("aria-hidden", String(!poster));
   }
   toggle.addEventListener("click", () => setList(!isOpen("is-list-open")));
@@ -63,7 +70,19 @@ export function setupOverlays({ records, stage, archive }) {
     if (rec) setLightbox(rec.poster);
   });
   lightbox.addEventListener("click", () => setLightbox(null));
+  // The lightbox covers the posters: wheel and keys mustn't move them
+  // underneath, or closing it lands on another bike.
+  const SCROLL_KEYS = [" ", "PageUp", "PageDown", "ArrowUp", "ArrowDown", "Home", "End"];
+  // Phones: a drag on the list overlay outside the names (around "close")
+  // mustn't scroll the posters behind it.
+  listNav.addEventListener("touchmove", (e) => {
+    if (isPhone() && !e.target.closest(".bike-list__items")) e.preventDefault();
+  }, { passive: false });
+  window.addEventListener("wheel", (e) => {
+    if (isOpen("is-lightbox-open")) e.preventDefault();
+  }, { passive: false });
   document.addEventListener("keydown", (e) => {
+    if (isOpen("is-lightbox-open") && SCROLL_KEYS.includes(e.key)) e.preventDefault();
     if (e.key !== "Escape") return;
     setList(false);
     setInfo(false);
