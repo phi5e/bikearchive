@@ -16,10 +16,23 @@ auf der Linie, die anderen darüber und darunter). Oben: Logo, „bike
 archive“ und „info“, ohne Hintergrund.
 
 Variante (zum Ausprobieren): Die Namen kommen in Instrument Serif herein
-und verschmelzen dabei zur breiten Sans. Abschalten: in `js/main.js`
+und verschmelzen dabei zur breiten Sans. Abschalten: in `js/site/config.js`
 `MORPH_FROM_SERIF = false` setzen.
 
-Plain HTML/CSS/JS, kein Build. `index.html` einfach öffnen oder hosten.
+Plain HTML/CSS/JS, kein Build. `index.html` hosten (die Skripte sind
+ES-Module, darum über einen Server öffnen, nicht per Doppelklick).
+
+## Code
+
+- `js/main.js`: Einstieg, verbindet die Module.
+- `js/site/config.js`: Schalter und Zeiten (Morph, Logo-Rollen, 18-fps-Test, Einrasten).
+- `js/site/build.js`: baut Plakate und Liste aus `js/bikes.js`.
+- `js/site/media.js`: Media Queries (Handy, reduzierte Bewegung).
+- `js/site/fit.js`: passt die Namen an die Breite an.
+- `js/site/layout.js`: gemessene Größen (Liste, Logo).
+- `js/site/entrance.js`: Auftritt von Name und Jahr.
+- `js/site/scroll.js`: das Archiv scrollt selbst (nicht die Seite), Einrasten, Vorladen, wann ein Name startet.
+- `js/site/overlays.js`: Liste, Manifesto, Lightbox.
 
 ## Räder pflegen
 

@@ -10,7 +10,6 @@
   --ink: #000000;
   --line: #000000;
   --line-w: 0.5px;
-  --fg-muted: #6b6b66;
 
   --font: "Sora", sans-serif;
   --font-display: "Archivo", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -22,8 +21,11 @@
 
   --name-max: 160px;
   --year-size: 13.5px;
-  --toggle-size: 11.7px;
   --list-size: 18px;
+
+  /* The logo ring's letters sit this far (of its size) inside its box. */
+  --ring-inset: 0.03;
+  --roll-ease: cubic-bezier(0.45, 0, 0.55, 1);
 
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -34,11 +36,6 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-}
-
-html {
-  scroll-snap-type: y mandatory;
-  scroll-behavior: smooth;
 }
 
 body {
@@ -75,12 +72,15 @@ ul {
 }
 
 /* ---------------------------------------------
-   Topbar — floats over the posters so each one
-   can stay a full 100vh tall (the poster sits centred below it).
+   Topbar — floats over the posters, so each one
+   can stay a full screen tall.
 --------------------------------------------- */
 
 .topbar {
   --logo-size: 112px;
+  /* Only the controls catch the pointer: a swipe or wheel that starts on
+     the bar itself still scrolls the posters below. */
+  pointer-events: none;
   position: fixed;
   inset: 0 0 auto 0;
   z-index: 30;
@@ -93,7 +93,7 @@ ul {
 
 .topbar__logo {
   /* The ring hangs below the bar, top left. When rolling (shelved, see
-     .topbar--roll), main.js sets the distance --roll-d, the matching turn
+     .topbar--roll), layout.js sets the distance --roll-d, the matching turn
      --roll-a and the duration --roll-t; both use the same timing, so the
      ring turns exactly as far as it travels, like a wheel. */
   position: absolute;
@@ -123,19 +123,13 @@ ul {
 }
 
 /* Shelved: the ring rolls to the right and back like a wheel. Switched
-   on with LOGO_ROLL in main.js, which adds .topbar--roll. */
+   on with LOGO_ROLL in config.js; layout.js then adds adds .topbar--roll. */
 .topbar--roll .topbar__logo {
   animation: logo-roll var(--roll-t, 10s) var(--roll-ease) infinite alternate;
 }
 
 .topbar--roll .logo-ring {
   animation: logo-turn var(--roll-t, 10s) var(--roll-ease) infinite alternate;
-}
-
-:root {
-  --roll-ease: cubic-bezier(0.45, 0, 0.55, 1);
-  /* The letters' outer edge sits this far inside the ring's box. */
-  --ring-inset: 0.03;
 }
 
 @keyframes logo-roll {
@@ -150,15 +144,21 @@ ul {
   }
 }
 
-/* Right column, level with the top of the ring's lettering. */
+/* Right column, starting a fifth of the ring's height below its top. */
 .topbar__nav {
   position: absolute;
-  top: calc(10px + var(--logo-size) * var(--ring-inset));
+  top: calc(10px + var(--logo-size) * 0.2);
   right: var(--gutter);
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 10px;
+}
+
+.topbar__logo,
+.topbar__info,
+.list-toggle {
+  pointer-events: auto;
 }
 
 .topbar__info,
@@ -178,20 +178,37 @@ ul {
 }
 
 /* ---------------------------------------------
-   Posters — one per screen, snapping. Each poster
+   Posters — one per screen, snapping. The archive
+   itself is the scroller (not the page), so phone
+   browser bars can't change the screen height
+   mid-scroll and throw the snapping off. Each poster
    is 80% of the screen height, centred in the
    space between the menu and the bottom edge.
 --------------------------------------------- */
 
+.archive {
+  position: fixed;
+  inset: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-snap-type: y mandatory;
+  outline: none;
+}
+
+/* While a jump from the list glides there (scroll.js), snapping would
+   catch every frame. */
+.archive.is-gliding {
+  scroll-snap-type: none;
+}
+
 .bike {
-  --poster-h: 80vh;
   position: relative;
-  height: 100vh;
-  height: 100svh;
+  height: 100%;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  padding-top: calc(var(--topbar-h) + (100vh - var(--topbar-h) - var(--poster-h)) / 2);
+  align-items: center;
+  padding-top: var(--topbar-h);
   /* Only clip sideways (wide posters on phones). Vertically nothing is
      clipped, so the drifting names can lie over the neighbouring posters. */
   overflow-x: clip;
@@ -200,11 +217,25 @@ ul {
 
 .bike__poster {
   display: block;
-  height: var(--poster-h);
+  height: 80vh;
+  /* The page never scrolls, so phone and tablet browser bars stay out:
+     measure against the screen with them. */
+  height: 80svh;
   width: auto;
-  /* Always 80% of the viewport height; on screens narrower than the
+  /* Always 80% of the screen height; on screens narrower than the
      poster the sides are cropped instead of shrinking it. */
   flex: none;
+}
+
+/* Posters blend in as soon as they start coming into view (main.js
+   adds .has-motion, scroll.js .is-near), and drop out once gone. */
+.has-motion .bike__poster {
+  opacity: 0;
+}
+
+.has-motion .bike.is-near .bike__poster {
+  opacity: 1;
+  transition: opacity 0.5s var(--ease-out);
 }
 
 .bike__poster,
@@ -232,7 +263,7 @@ ul {
   margin-bottom: 4px;
 }
 
-/* Font size is fitted in main.js so the name always fills at most the
+/* Font size is fitted in fit.js so the name always fills at most the
    width on a single line, capped at --name-max. */
 .bike__name {
   display: block;
@@ -254,7 +285,7 @@ ul {
   vertical-align: top;
 }
 
-/* Holds the letters main.js animates; the outer .bike__name keeps the
+/* Holds the letters entrance.js animates; the outer .bike__name keeps the
    parallax transform. */
 .bike__name-inner {
   display: inline-block;
@@ -271,12 +302,23 @@ ul {
   will-change: transform;
 }
 
+/* The year's digits: masked slots like the name's letters. */
+.bike__ychar {
+  display: inline-block;
+  clip-path: inset(-100% 0 -100% 0);
+}
+
+.bike__yglyph {
+  display: inline-block;
+  will-change: transform;
+}
+
 .bike__glyph {
   display: inline-block;
   will-change: transform;
 }
 
-/* Morph variant (MORPH_FROM_SERIF in main.js): the sans and the serif
+/* Morph variant (MORPH_FROM_SERIF in config.js): the sans and the serif
    letter sit on one baseline; the serif adds no width. */
 .bike__glyph--morph {
   display: inline-grid;
@@ -312,9 +354,9 @@ ul {
 }
 
 /* ---------------------------------------------
-   "view list" — top right under "manifesto". Both
-   words share one grid cell and slide past each
-   other in step with the list panel.
+   "view list" — left, vertically centred (phones:
+   under "manifesto"). Both words share one grid
+   cell and slide past each other as the list opens.
 --------------------------------------------- */
 
 .list-toggle {
@@ -377,7 +419,7 @@ ul {
 .bike-list {
   position: fixed;
   /* Centred on the toggle's line, as far up as down (--list-half, set in
-     main.js). The padding lets the first and last names reach the line. */
+     layout.js). The padding lets the first and last names reach the line. */
   top: calc(50% - var(--list-half, 200px));
   height: calc(var(--list-half, 200px) * 2);
   left: calc(max(var(--gutter), 24px) - 20px + var(--toggle-w, 90px) + 24px);
@@ -545,9 +587,10 @@ ul {
     --list-size: 16px;
   }
 
-  /* Phones: every poster fills the whole screen. */
+  /* Phones: every poster fills the whole screen, one per swipe. */
   .bike {
     padding-top: 0;
+    scroll-snap-stop: always;
   }
 
   .bike__poster {
@@ -558,7 +601,7 @@ ul {
     object-fit: cover;
   }
 
-  /* Names at 60% of the desktop size, wrapping between words. main.js
+  /* Names at 60% of the desktop size, wrapping between words. fit.js
      sets the line height so the caps of one line end 5px above the next
      (and pads the top so the first line's caps aren't cut off). */
   .bike__name {
@@ -566,13 +609,10 @@ ul {
     line-height: 0.8;
   }
 
-  /* "view list" sits under "manifesto", top right, both centred on
-     each other. No swap to "close list" here: the overlay has its own
-     "close". */
-  /* The two words span the ring's height, each pulled 20% of the
-     ring inwards from its top and bottom edge. */
+  /* "manifesto" and "view list" centred on each other, spanning the
+     ring's height, each a fifth of the ring in from its top and bottom
+     edge. No swap to "close list": the overlay has its own "close". */
   .topbar__nav {
-    top: calc(10px + var(--logo-size) * 0.2);
     height: calc(var(--logo-size) * 0.6);
     align-items: center;
     justify-content: space-between;
@@ -596,6 +636,22 @@ ul {
     display: none;
   }
 
+  /* Bigger tap targets than the words themselves (they stay apart, the
+     two words are about 30px apart). */
+  .topbar__info,
+  .list-toggle {
+    position: relative;
+    inset: auto;
+    overflow: visible;
+  }
+
+  .topbar__info::after,
+  .list-toggle::after {
+    content: "";
+    position: absolute;
+    inset: -12px -18px;
+  }
+
   .info {
     --info-ring: 84px;
   }
@@ -615,9 +671,11 @@ ul {
     mask-image: none;
   }
 
+  /* Closes slowly (LIST_FADE_MS in config.js), then the page glides
+     to the bike that was tapped. */
   .bike-list {
     opacity: 0;
-    transition: opacity 0.45s var(--ease-out), visibility 0s linear 0.45s;
+    transition: opacity 0.6s var(--ease-in-out), visibility 0s linear 0.6s;
   }
 
   .is-list-open .bike-list {
@@ -657,24 +715,12 @@ ul {
   }
 }
 
-/* The overlay sits above the menu bar, so its "close" uses the same
-   ring size as the bar. */
-@media (max-width: 600px) {
-  .bike-list {
-    --logo-size: 84px;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .topbar__logo,
   .logo-ring,
   .topbar--roll .topbar__logo,
   .topbar--roll .logo-ring {
     animation: none;
-  }
-
-  html {
-    scroll-behavior: auto;
   }
 
   .list-toggle,
@@ -687,3 +733,4 @@ ul {
     transition-delay: 0s;
   }
 }
+

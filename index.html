@@ -22,8 +22,8 @@
         </text>
       </svg>
     </a>
-    <!-- Right column, level with the top of the ring. "view list" sits
-         under "manifesto" on phones; elsewhere it is fixed at the left. -->
+    <!-- Right column, inside the ring's height. "view list" sits under
+         "manifesto" on phones; elsewhere it is fixed at the left. -->
     <nav class="topbar__nav">
       <a href="#manifesto" class="topbar__info" id="info-toggle" aria-controls="info" aria-expanded="false">manifesto</a>
       <button type="button" class="list-toggle" id="list-toggle" aria-controls="bike-list" aria-expanded="false">
@@ -40,17 +40,19 @@
   </nav>
 
   <!-- Tap a poster: the whole image, with "close" on top like the list. -->
-    <div class="lightbox" id="lightbox" aria-hidden="true" role="dialog" aria-label="Plakat">
-      <button type="button" class="lightbox__close" id="lightbox-close">close</button>
-      <img class="lightbox__img" id="lightbox-img" alt="" />
-    </div>
-    <section class="info" id="info" aria-label="Manifesto" aria-hidden="true">
+  <div class="lightbox" id="lightbox" aria-hidden="true" role="dialog" aria-label="Plakat">
+    <button type="button" class="lightbox__close" id="lightbox-close">close</button>
+    <img class="lightbox__img" id="lightbox-img" alt="" />
+  </div>
+
+  <section class="info" id="info" aria-label="Manifesto" aria-hidden="true">
     <p class="info__text">Astalla Bici is like an on-again, off-again relationship. We know we should stop, but there is always another frame around the corner: rare, rusty, regal, impossible to pass up. So we haul it home and build it from the bones of bikes from the beyond. As we drive the screws in, we drive out the ghost of our better judgment. We lose ourselves in cold steel. Like glistening seals, we slide half-naked across the oily garage floor and set out on the everlasting quest for the right Allen key. It’s gone again. For fuck’s sake.</p>
     <p class="info__text">We are a DIY bike garage in Munich, Germany. We build what we like, never for money or for clients, and show the bikes here for posterity.</p>
     <p class="info__text">But a garage is just a garage. Parts pile up, frames hang from the ceiling, and there’s barely room left to work. Nobody should keep fifteen bikes, and bikes need to be free anyway, like wild mustangs, or some shit. So some are somberly sold, a few keenly kept. We cut our unkempt hair, air out our sweaty, oily shirts and swear that’s the end of it. Then the next one calls, and we come back together in an endless maelstrom of clanking steel, salty sweat and moldy rubber. It’s a cycle, after all.</p>
   </section>
 
-  <main class="archive" id="archive"></main>
+  <!-- The posters (built by js/site/build.js); this box is what scrolls. -->
+  <main class="archive" id="archive" tabindex="-1"></main>
 
   <!-- Horizontal-only blur for the names while they squash and stretch. -->
   <svg class="fx" aria-hidden="true" focusable="false">
@@ -66,6 +68,6 @@
 
   <script src="js/vendor/gsap.min.js"></script>
   <script src="js/bikes.js"></script>
-  <script src="js/main.js"></script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
