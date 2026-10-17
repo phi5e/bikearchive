@@ -179,33 +179,29 @@ ul {
 }
 
 /* ---------------------------------------------
-   Posters — one per screen, snapping. The archive
-   itself is the scroller (not the page), so phone
-   browser bars can't change the screen height
-   mid-scroll and throw the snapping off. Each poster
-   is 80% of the screen height, centred in the
-   space between the menu and the bottom edge.
+   Posters — one per screen, snapping. The page
+   itself scrolls, so phone browsers can shrink
+   their bars. Every poster is as tall as the screen
+   with the bars hidden (100lvh): that height never
+   changes while the bars come and go, so the snap
+   points stay put. Each poster is 80% of the screen
+   height, centred between the menu and the bottom.
 --------------------------------------------- */
 
-.archive {
-  position: fixed;
-  inset: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+html {
   scroll-snap-type: y mandatory;
-  outline: none;
 }
 
 /* While a jump from the list glides there (scroll.js), snapping would
    catch every frame. */
-.archive.is-gliding {
+html.is-gliding {
   scroll-snap-type: none;
 }
 
 .bike {
   position: relative;
-  height: 100%;
+  height: 100vh;
+  height: 100lvh;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -213,14 +209,27 @@ ul {
   /* Only clip sideways (wide posters on phones). Vertically nothing is
      clipped, so the drifting names can lie over the neighbouring posters. */
   overflow-x: clip;
+}
+
+/* The page snaps to this, not to the poster: it starts where the poster
+   starts but is only as tall as the screen with the bars shown. A snap
+   target taller than the screen would let the page stop anywhere inside
+   it (that was the half-way stops while Safari's bar was out). */
+.bike__snap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100vh;
+  height: 100svh;
   scroll-snap-align: start;
+  pointer-events: none;
 }
 
 .bike__poster {
   display: block;
   height: 80vh;
-  /* The page never scrolls, so phone and tablet browser bars stay out:
-     measure against the screen with them. */
+  /* Measured against the screen with the browser bars shown. */
   height: 80svh;
   width: auto;
   /* Always 80% of the screen height; on screens narrower than the
@@ -253,7 +262,10 @@ ul {
   position: absolute;
   left: var(--gutter);
   right: var(--gutter);
-  bottom: var(--gutter);
+  /* Above the phone browser's bottom bar while it is shown (--bar-gap,
+     layout.js), following it as it shrinks and grows. */
+  bottom: calc(var(--gutter) + var(--bar-gap, 0px));
+  transition: bottom 0.3s var(--ease-out);
   /* Above every poster, not just this section's. */
   z-index: 5;
   pointer-events: none;
@@ -549,6 +561,8 @@ ul {
   inset: 0;
   z-index: 25;
   overflow-y: auto;
+  /* Scrolling the text never scrolls the posters behind it. */
+  overscroll-behavior: contain;
   /* Starts below the ring (112px; 84px on phones). */
   padding: calc(10px + var(--info-ring, 112px) + 28px) var(--gutter) 48px;
   background: var(--bg);
@@ -592,20 +606,6 @@ ul {
     --list-size: 16px;
   }
 
-  /* The posters reach under the browser's status and tool bars (Safari
-     paints those areas grey otherwise, since the page itself never
-     scrolls and so never hides them): the scroller is as tall as the
-     largest screen, and the name stays above the bottom bar. */
-  .archive {
-    bottom: auto;
-    height: 100vh;
-    height: 100lvh;
-  }
-
-  .bike__caption {
-    bottom: calc(var(--gutter) + 100lvh - 100svh);
-  }
-
   /* Overlays cover the status bar too; their contents start below it.
      (A transparent border, so the absolutely placed parts move as well.) */
   .lightbox,
@@ -618,6 +618,9 @@ ul {
   /* Phones: every poster fills the whole screen, one per swipe. */
   .bike {
     padding-top: 0;
+  }
+
+  .bike__snap {
     scroll-snap-stop: always;
   }
 
@@ -722,6 +725,7 @@ ul {
     left: var(--gutter);
     right: var(--gutter);
     overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 40px 0 45vh;
     scrollbar-width: none;
     -webkit-mask-image: linear-gradient(to bottom, transparent, #000 48px, #000 calc(100% - 96px), transparent);

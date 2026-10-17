@@ -68,7 +68,10 @@ export function buildArchive(bikes, archive, list) {
     const year = el("span", "bike__year");
     const name = el("span", "bike__name");
     caption.append(year, name);
-    section.append(poster, caption);
+    // What the page snaps to (see .bike__snap in the css).
+    const snap = el("span", "bike__snap");
+    snap.setAttribute("aria-hidden", "true");
+    section.append(snap, poster, caption);
     archive.appendChild(section);
     const item = el("li", "bike-list__item");
     item.dataset.target = id;

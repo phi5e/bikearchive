@@ -31,3 +31,11 @@ export function createLayout(records) {
     root.style.setProperty("--list-half", `${Math.floor(half)}px`);
   };
 }
+
+// How much of a poster the browser bars cover at the bottom right now
+// (posters are as tall as the screen without them). The names sit above.
+export function barGap() {
+  const poster = document.querySelector(".bike");
+  const gap = poster ? Math.max(0, poster.offsetHeight - innerHeight) : 0;
+  root.style.setProperty("--bar-gap", `${gap}px`);
+}

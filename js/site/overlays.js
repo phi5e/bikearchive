@@ -3,7 +3,7 @@
 import { LIST_FADE_MS } from "./config.js";
 import { isPhone } from "./media.js";
 
-export function setupOverlays({ records, stage, scroller }) {
+export function setupOverlays({ records, stage, archive }) {
   const body = document.body;
   const toggle = document.getElementById("list-toggle");
   const openWord = toggle.querySelector('[data-word="open"]');
@@ -15,7 +15,6 @@ export function setupOverlays({ records, stage, scroller }) {
   const lightbox = document.getElementById("lightbox");
   const lightboxImg = document.getElementById("lightbox-img");
   const isOpen = (name) => body.classList.contains(name);
-  const refocus = () => scroller.focus({ preventScroll: true });
   function setList(open) {
     if (open && isPhone()) {
       listItems.scrollTop = 0;
@@ -24,7 +23,6 @@ export function setupOverlays({ records, stage, scroller }) {
       if (li) listNav.scrollTop = li.offsetTop + li.offsetHeight / 2 - listNav.clientHeight / 2;
     }
     body.classList.toggle("is-list-open", open);
-    if (!open) refocus();
     toggle.setAttribute("aria-expanded", String(open));
     openWord.setAttribute("aria-hidden", String(open));
     closeWord.setAttribute("aria-hidden", String(!open));
@@ -32,7 +30,6 @@ export function setupOverlays({ records, stage, scroller }) {
   function setInfo(open) {
     if (open) setList(false);
     body.classList.toggle("is-info-open", open);
-    if (!open) refocus();
     infoToggle.textContent = open ? "close" : "manifesto";
     infoToggle.setAttribute("aria-expanded", String(open));
     info.setAttribute("aria-hidden", String(!open));
@@ -43,7 +40,6 @@ export function setupOverlays({ records, stage, scroller }) {
       lightboxImg.alt = poster.alt;
     }
     body.classList.toggle("is-lightbox-open", !!poster);
-    if (!poster) refocus();
     lightbox.setAttribute("aria-hidden", String(!poster));
   }
   toggle.addEventListener("click", () => setList(!isOpen("is-list-open")));
@@ -62,7 +58,7 @@ export function setupOverlays({ records, stage, scroller }) {
     e.preventDefault();
     setInfo(!isOpen("is-info-open"));
   });
-  scroller.addEventListener("click", (e) => {
+  archive.addEventListener("click", (e) => {
     const rec = records.find((r) => r.section.contains(e.target));
     if (rec) setLightbox(rec.poster);
   });
