@@ -48,18 +48,19 @@ function largeScreen() {
   }
   return probe.offsetHeight;
 }
-// The tallest height is remembered for the visit, so a reload doesn't
-// have to find it again (a browser can report it only once its bars hide).
+// The tallest height is remembered on the device, so it only has to be
+// found once (Firefox on iPhones reports it only after its bars first
+// hide, which made the posters grow on the first swipe of every visit).
 const remembered = (width) => {
   try {
-    return Number(sessionStorage.getItem(`poster-h-${width}`)) || 0;
+    return Number(localStorage.getItem(`poster-h-${width}`)) || 0;
   } catch {
     return 0;
   }
 };
 const remember = (width, height) => {
   try {
-    sessionStorage.setItem(`poster-h-${width}`, String(height));
+    localStorage.setItem(`poster-h-${width}`, String(height));
   } catch {}
 };
 let posterH = 0;
