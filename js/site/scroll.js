@@ -2,9 +2,20 @@
 // and when a poster's entrance plays.
 
 import { GLIDE, PLAY_AT, SETTLE_MS } from "./config.js";
-import { isPhone, reduceMotion } from "./media.js";
+import { isPhone, reduceMotion, waitsForFinger } from "./media.js";
 
 const PRELOAD_AHEAD = 2;
+// A poster counts as snapped when it is within this share of a screen
+// of its place (the old 10% let names start while still sliding in).
+const SNAP_SLACK = 0.01;
+
+// Load and decode a poster before it scrolls in, so it never appears late.
+function warm(rec) {
+  if (!rec || rec.warm) return;
+  rec.warm = true;
+  rec.poster.loading = "eager";
+  rec.poster.decode?.().catch(() => {});
+}
 function parallax(rec, p) {
   rec.poster.style.transform = isPhone() ? "" : `translate3d(0, ${p * -6}vh, 0)`;
   rec.name.style.transform = `translate3d(0, ${p * 14}vh, 0)`;
@@ -23,8 +34,7 @@ export function setupScroll({ scroller, records, entrances }) {
     if (index === current) return;
     current = index;
     records.forEach((rec, i) => rec.item.classList.toggle("is-current", i === index));
-    for (let i = index; i <= index + PRELOAD_AHEAD && i < records.length; i++) records[i].poster.loading = "eager";
-    if (index > 0) records[index - 1].poster.loading = "eager";
+    for (let i = index - 1; i <= index + PRELOAD_AHEAD; i++) warm(records[i]);
   }
   function update() {
     queued = false;
@@ -46,7 +56,7 @@ export function setupScroll({ scroller, records, entrances }) {
       if (!entrance) return;
       if (visible <= 1) {
         if (entrance.state !== "hidden") entrance.hide();
-      } else if (armed && !jumping && !isPhone() && visible >= h * PLAY_AT) {
+      } else if (armed && !jumping && !waitsForFinger() && visible >= h * PLAY_AT) {
         entrance.play();
       }
     });
@@ -59,7 +69,7 @@ export function setupScroll({ scroller, records, entrances }) {
     const rec = records[current];
     if (!rec) return;
     const h = scroller.clientHeight;
-    if (Math.abs(rec.section.offsetTop - scroller.scrollTop) > h * 0.1) return;
+    if (Math.abs(rec.section.offsetTop - scroller.scrollTop) > h * SNAP_SLACK) return;
     jumping = false;
     restIndex = current;
     entrances?.[current].play();
@@ -101,6 +111,8 @@ export function setupScroll({ scroller, records, entrances }) {
     jumpTo(section) {
       stopGlide();
       jumping = true;
+      const i = records.findIndex((r) => r.section === section);
+      for (let k = i - 1; k <= i + 1; k++) warm(records[k]);
       const to = section.offsetTop;
       const posters = Math.abs(to - scroller.scrollTop) / (scroller.clientHeight || 1);
       if (reduceMotion || !window.gsap || posters < 0.01) {

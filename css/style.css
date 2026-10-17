@@ -227,15 +227,19 @@ ul {
   flex: none;
 }
 
-/* Posters blend in as soon as they start coming into view (main.js
-   adds .has-motion, scroll.js .is-near), and drop out once gone. */
-.has-motion .bike__poster {
-  opacity: 0;
-}
+/* Mouse and trackpad: posters blend in as soon as they start coming into
+   view (main.js adds .has-motion, scroll.js .is-near), and drop out once
+   gone. Not on touch screens: there a swipe is faster than the fade, so
+   the next poster showed up as an empty grey box. */
+@media (hover: hover) and (pointer: fine) {
+  .has-motion .bike__poster {
+    opacity: 0;
+  }
 
-.has-motion .bike.is-near .bike__poster {
-  opacity: 1;
-  transition: opacity 0.5s var(--ease-out);
+  .has-motion .bike.is-near .bike__poster {
+    opacity: 1;
+    transition: opacity 0.5s var(--ease-out);
+  }
 }
 
 .bike__poster,
