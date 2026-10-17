@@ -33,6 +33,9 @@ export function setupScroll({ records, entrances }) {
   let queued = false;
   let settleTimer = 0;
   let glide = null;
+  let lastScroll = 0;
+  // Work that must wait until no finger is down and the page has stopped.
+  const waiting = new Set();
   // Posters are as tall as the screen with the browser bars hidden, so
   // they can be taller than what is visible while the bars are shown.
   const posterHeight = () => records[0]?.section.offsetHeight || innerHeight;
@@ -73,7 +76,13 @@ export function setupScroll({ records, entrances }) {
   }
   function settle() {
     clearTimeout(settleTimer);
-    if (!armed || touches > 0 || glide) return;
+    if (touches > 0 || glide) return;
+    if (waiting.size) {
+      const jobs = [...waiting];
+      waiting.clear();
+      jobs.forEach((job) => job());
+    }
+    if (!armed) return;
     update();
     const rec = records[current];
     if (!rec) return;
@@ -87,6 +96,7 @@ export function setupScroll({ records, entrances }) {
     settleTimer = setTimeout(settle, SETTLE_MS);
   };
   window.addEventListener("scroll", () => {
+    lastScroll = performance.now();
     if (!queued) {
       queued = true;
       requestAnimationFrame(update);
@@ -114,6 +124,13 @@ export function setupScroll({ records, entrances }) {
   });
   return {
     update,
+    atRest(job) {
+      if (touches === 0 && !glide && performance.now() - lastScroll > SETTLE_MS) job();
+      else {
+        waiting.add(job);
+        settleSoon();
+      }
+    },
     arm() {
       armed = true;
       settle();
@@ -139,6 +156,8 @@ export function setupScroll({ records, entrances }) {
         ease: "power3.inOut",
         onComplete() {
           glide = null;
+          // The posters may have been resized on the way.
+          page.scrollTop = restingTop(section);
           page.classList.remove("is-gliding");
           settle();
         }

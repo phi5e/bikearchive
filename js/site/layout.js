@@ -2,7 +2,7 @@
 
 import { LOGO_ROLL } from "./config.js";
 import { fitNames } from "./fit.js";
-import { waitsForFinger } from "./media.js";
+import { touchQuery } from "./media.js";
 
 const root = document.documentElement;
 const cssPx = (name, fallback) => parseFloat(getComputedStyle(root).getPropertyValue(name)) || fallback;
@@ -64,15 +64,28 @@ const remember = (width, height) => {
 };
 let posterH = 0;
 let posterW = 0;
+// Call once the page is at rest and a new width has stopped changing
+// (main.js): turning a phone resizes width and height in separate steps.
 export function sizePosters() {
-  const touch = waitsForFinger();
-  const keep = touch && innerWidth === posterW;
-  const height = keep
-    ? Math.max(posterH, innerHeight)
-    : Math.max(innerHeight, touch ? Math.max(largeScreen(), remembered(innerWidth)) : 0);
-  posterW = innerWidth;
+  // Pinch zoom changes the measured screen too; ignore it.
+  if (window.visualViewport && visualViewport.scale > 1.01) return;
+  const touch = touchQuery.matches;
+  const width = root.clientWidth;
+  let height;
+  // Same width and roughly the same height (the bars change it by far
+  // less than a quarter): only ever grow.
+  if (touch && width === posterW && innerHeight > posterH * 0.75) {
+    height = Math.max(posterH, innerHeight);
+  } else if (touch) {
+    // A remembered height only counts if it fits this screen.
+    const saved = remembered(width);
+    height = Math.max(innerHeight, largeScreen(), saved <= innerHeight * 1.3 ? saved : 0);
+  } else {
+    height = innerHeight;
+  }
+  posterW = width;
   if (height === posterH) return;
-  if (touch) remember(innerWidth, height);
+  if (touch) remember(width, height);
   // Stay on the same poster when the height does change.
   const page = document.scrollingElement || root;
   const index = posterH ? Math.round(page.scrollTop / posterH) : 0;

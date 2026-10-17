@@ -25,13 +25,22 @@ document.fonts.ready.then(() => {
   stage.arm();
 });
 // Phone browsers resize the screen whenever their bars grow or shrink;
-// there only a new width needs the names fitted again.
+// there only a new width needs the names fitted again. Posters are only
+// resized with the page at rest (never mid-swipe), and after a new width
+// has settled.
 let width = innerWidth;
-window.addEventListener("resize", () => {
+let widthTimer = 0;
+function resized() {
   sizePosters();
   if (innerWidth !== width || !waitsForFinger()) {
     width = innerWidth;
     layout();
   }
+  stage.update();
+}
+window.addEventListener("resize", () => {
+  clearTimeout(widthTimer);
+  if (innerWidth !== width) widthTimer = setTimeout(() => stage.atRest(resized), 250);
+  else stage.atRest(resized);
   stage.update();
 });
