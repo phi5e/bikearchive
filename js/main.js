@@ -4,12 +4,13 @@ import { buildArchive } from "./site/build.js";
 import { createEntrance } from "./site/entrance.js";
 import { NAME_SPOT } from "./site/config.js";
 import { createLayout, sizePosters } from "./site/layout.js";
-import { reduceMotion, waitsForFinger } from "./site/media.js";
+import { reduceMotion, swipes, waitsForFinger } from "./site/media.js";
 import { setupOverlays } from "./site/overlays.js";
 import { setupScroll } from "./site/scroll.js";
 
 const archive = document.getElementById("archive");
-document.documentElement.classList.toggle("names-middle", NAME_SPOT === "middle");
+document.documentElement.classList.add(`names-${NAME_SPOT}`);
+document.documentElement.classList.toggle("is-swipe", swipes);
 const records = buildArchive(window.BIKES || [], archive, document.getElementById("bike-list-items"));
 const layout = createLayout(records);
 const motion = !!window.gsap && !reduceMotion;
@@ -17,7 +18,7 @@ document.documentElement.classList.toggle("has-motion", motion);
 const blurDev = document.getElementById("name-blur-dev");
 const entrances = motion ? records.map((rec) => createEntrance(rec, blurDev)) : null;
 entrances?.forEach((e) => e.hide());
-const stage = setupScroll({ records, entrances });
+const stage = setupScroll({ records, entrances, archive });
 setupOverlays({ records, stage, archive });
 sizePosters();
 layout();
@@ -34,6 +35,7 @@ let width = innerWidth;
 let widthTimer = 0;
 function resized() {
   sizePosters();
+  stage.realign();
   if (innerWidth !== width || !waitsForFinger()) {
     width = innerWidth;
     layout();

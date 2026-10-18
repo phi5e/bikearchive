@@ -1,9 +1,11 @@
 // Page scrolling: parallax, which poster is current, preloading, and when
 // a poster's entrance plays. The page itself scrolls (not a box inside
-// it), so phone browsers can shrink their bars while scrolling.
+// it), so phone browsers can shrink their bars while scrolling. In swipe
+// mode (config.js) the page stays put and the posters move as one strip.
 
 import { GLIDE, PLAY_AT, SETTLE_MS } from "./config.js";
-import { isPhone, reduceMotion, touchQuery, waitsForFinger } from "./media.js";
+import { isPhone, reduceMotion, swipes, touchQuery, waitsForFinger } from "./media.js";
+import { setupSwipe } from "./swipe.js";
 
 const PRELOAD_AHEAD = 2;
 // A poster counts as snapped when it is within this share of a screen
@@ -37,7 +39,7 @@ function parallax(rec, p) {
   rec.name.style.transform = `translate3d(0, ${p * 14}vh, 0)`;
   rec.year.style.transform = `translate3d(0, ${p * 26}vh, 0)`;
 }
-export function setupScroll({ records, entrances }) {
+export function setupScroll({ records, entrances, archive }) {
   let armed = false;
   let current = -1;
   let restIndex = 0;
@@ -52,22 +54,40 @@ export function setupScroll({ records, entrances }) {
   // Where the page was last put by a glide or a jump, so the scroll
   // events those cause aren't taken for a drag.
   let placedAt = NaN;
+  // Swipe mode: how far the strip of posters is moved up, and the poster
+  // a glide is heading to.
+  let stripTop = 0;
+  let heading = -1;
+  let arrows = null;
   // Work that must wait until no finger is down and the page has stopped.
   const waiting = new Set();
   // Posters are as tall as the screen with the browser bars hidden, so
   // they can be taller than what is visible while the bars are shown.
   const posterHeight = () => records[0]?.section.offsetHeight || innerHeight;
-  // Where the page rests on a poster (the last one may not reach the top).
-  const restingTop = (section) => Math.min(section.offsetTop, page.scrollHeight - innerHeight);
+  // Where the page (or the strip) is, and where it rests on a poster (the
+  // last one may not reach the top).
+  const position = () => (swipes ? stripTop : page.scrollTop);
+  const restingTop = (section) => Math.min(section.offsetTop, (swipes ? archive.offsetHeight : page.scrollHeight) - innerHeight);
+  function place(top) {
+    if (!swipes) {
+      page.scrollTop = top;
+      return;
+    }
+    stripTop = top;
+    archive.style.transform = `translate3d(0, ${-top}px, 0)`;
+    moved();
+  }
+  const nearest = () => Math.max(0, Math.min(records.length - 1, Math.round(position() / posterHeight())));
   function setCurrent(index) {
     if (index === current) return;
     current = index;
     records.forEach((rec, i) => rec.item.classList.toggle("is-current", i === index));
+    arrows?.current(index);
     for (let i = index - 1; i <= index + PRELOAD_AHEAD; i++) warm(records[i]);
   }
   function update() {
     queued = false;
-    const top = page.scrollTop;
+    const top = position();
     const h = posterHeight();
     const vh = innerHeight;
     if (Math.abs(Math.round(top / h) - restIndex) >= 2) jumping = true;
@@ -96,7 +116,7 @@ export function setupScroll({ records, entrances }) {
   // direction the page was moved (wheel, keys, a flick), or else the one
   // mostly on screen.
   function landingFor(rec) {
-    const top = page.scrollTop;
+    const top = position();
     if (top > placedAt + 1) return (records.find((r) => restingTop(r.section) > top) || records[records.length - 1]).section;
     if (top < placedAt - 1) return (records.findLast((r) => restingTop(r.section) < top) || records[0]).section;
     return rec.section;
@@ -113,10 +133,12 @@ export function setupScroll({ records, entrances }) {
     update();
     const rec = records[current];
     if (!rec) return;
-    if (Math.abs(restingTop(rec.section) - page.scrollTop) > posterHeight() * SNAP_SLACK) {
-      if (snapIsOff()) jumpTo(landingFor(rec));
+    if (Math.abs(restingTop(rec.section) - position()) > posterHeight() * SNAP_SLACK) {
+      if (swipes || snapIsOff()) jumpTo(landingFor(rec));
       return;
     }
+    // Swipe mode: a glide stopped just short of the poster lands exactly.
+    if (swipes && Math.abs(restingTop(rec.section) - position()) > 0.5) place(restingTop(rec.section));
     jumping = false;
     restIndex = current;
     entrances?.[current].play();
@@ -125,11 +147,11 @@ export function setupScroll({ records, entrances }) {
     clearTimeout(settleTimer);
     settleTimer = setTimeout(settle, SETTLE_MS);
   };
-  window.addEventListener("scroll", () => {
+  function moved() {
     lastScroll = performance.now();
     // Moving with a finger down (and no glide) is a drag: snapping can
     // come back now, the browser picks the poster when the finger lets go.
-    if (touches > 0 && !glide && snapIsOff() && Math.abs(page.scrollTop - placedAt) > 1) {
+    if (!swipes && touches > 0 && !glide && snapIsOff() && Math.abs(page.scrollTop - placedAt) > 1) {
       snapOn();
       snapBackAt = lastScroll;
       snapTakenIn = false;
@@ -140,66 +162,99 @@ export function setupScroll({ records, entrances }) {
       requestAnimationFrame(update);
     }
     settleSoon();
-  }, { passive: true });
-  if ("onscrollend" in window) window.addEventListener("scrollend", settle);
+  }
+  if (!swipes) {
+    window.addEventListener("scroll", moved, { passive: true });
+    if ("onscrollend" in window) window.addEventListener("scrollend", settle);
+  }
   // Mouse, wheel and keys stop a glide where it is. A touch only does
   // once it moves (on touch screens a pen counts as a finger).
   const stopGlide = (e) => {
     const finger = e?.pointerType === "touch" || (e?.pointerType === "pen" && touchQuery.matches);
-    if (!glide || finger) return;
+    if (!glide || finger) return false;
     glide.kill();
     glide = null;
+    heading = -1;
     if (touchQuery.matches) settleSoon();
     else snapOn();
+    return true;
   };
-  ["wheel", "pointerdown", "keydown"].forEach((type) => window.addEventListener(type, stopGlide, { passive: true }));
+  // In swipe mode the wheel and the keys move to the next bike (swipe.js).
+  (swipes ? ["pointerdown"] : ["wheel", "pointerdown", "keydown"]).forEach((type) => window.addEventListener(type, stopGlide, { passive: true }));
   const onTouch = (e) => {
     touches = e.touches.length;
     if (touches > 0) return;
-    if (!snapTakenIn || performance.now() - snapBackAt < FLICK_MS) snapOff();
+    if (!swipes && (!snapTakenIn || performance.now() - snapBackAt < FLICK_MS)) snapOff();
     settleSoon();
   };
   ["touchstart", "touchend", "touchcancel"].forEach((type) => window.addEventListener(type, onTouch, { passive: true }));
   // A finger moving on the page (not on the list or the manifesto, which
   // scroll themselves) takes over from a glide.
-  window.addEventListener("touchmove", (e) => {
-    if (!glide || e.target.closest?.(".bike-list, .info")) return;
-    glide.kill();
-    glide = null;
-  }, { passive: true });
+  if (!swipes) {
+    window.addEventListener("touchmove", (e) => {
+      if (!glide || e.target.closest?.(".bike-list, .info")) return;
+      glide.kill();
+      glide = null;
+    }, { passive: true });
+  }
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) touches = 0;
   });
-  // Glide to a poster without the ones on the way playing.
-  function jumpTo(section) {
+  // Glide to a poster without the ones on the way playing. A swipe
+  // (swipe mode) passes its own, shorter slide.
+  function jumpTo(section, slide) {
     stopGlide();
     jumping = true;
     const i = records.findIndex((r) => r.section === section);
     for (let k = i - 1; k <= i + 1; k++) warm(records[k]);
+    const from = position();
     const to = restingTop(section);
-    const posters = Math.abs(to - page.scrollTop) / posterHeight();
-    if (touchQuery.matches) snapOff();
+    const posters = Math.abs(to - from) / posterHeight();
+    if (touchQuery.matches && !swipes) snapOff();
     if (reduceMotion || !window.gsap || posters < 0.01) {
-      page.scrollTop = to;
-      placedAt = page.scrollTop;
+      place(to);
+      placedAt = position();
       settleSoon();
       return;
     }
-    snapOff();
-    glide = gsap.to(page, {
-      scrollTop: to,
-      duration: Math.min(GLIDE.max, GLIDE.base + GLIDE.perPoster * posters),
-      ease: "power3.inOut",
+    if (!swipes) snapOff();
+    heading = i;
+    arrows?.current(i);
+    const strip = { top: from };
+    glide = gsap.to(strip, {
+      top: to,
+      duration: slide?.duration ?? Math.min(GLIDE.max, GLIDE.base + GLIDE.perPoster * posters),
+      ease: slide?.ease ?? "power3.inOut",
       onUpdate() {
-        placedAt = page.scrollTop;
+        place(strip.top);
+        placedAt = position();
       },
       onComplete() {
         glide = null;
+        heading = -1;
         // The posters may have been resized on the way.
-        page.scrollTop = restingTop(section);
-        placedAt = page.scrollTop;
+        place(restingTop(section));
+        placedAt = position();
         if (!touchQuery.matches) snapOn();
         settle();
+      }
+    });
+  }
+  if (swipes) {
+    arrows = setupSwipe({
+      count: records.length,
+      position,
+      place,
+      posterHeight,
+      nearest,
+      // Where a step goes from: the poster a glide is heading to, or else
+      // the one on screen.
+      heading: () => (heading >= 0 ? heading : nearest()),
+      topOf: (i) => restingTop(records[i].section),
+      stop: () => stopGlide(),
+      go(i, slide) {
+        const target = Math.max(0, Math.min(records.length - 1, i));
+        jumpTo(records[target].section, slide);
       }
     });
   }
@@ -216,6 +271,11 @@ export function setupScroll({ records, entrances }) {
       armed = true;
       settle();
     },
-    jumpTo
+    jumpTo,
+    // Swipe mode: after the posters change height, back onto the current
+    // one (in scroll mode sizePosters() moves the page itself).
+    realign() {
+      if (swipes && !glide) place(restingTop(records[Math.max(0, current)].section));
+    }
   };
 }

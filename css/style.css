@@ -199,6 +199,83 @@ html.no-snap {
   scroll-snap-type: none;
 }
 
+/* Swipe mode (PHONE_BROWSING in config.js, touch screens only): the page
+   never scrolls, so the browser bars stay as they are. The posters are
+   one fixed strip that swipe.js slides up and down. */
+html.is-swipe,
+html.is-swipe body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+html.is-swipe {
+  scroll-snap-type: none;
+}
+
+.is-swipe .archive {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  will-change: transform;
+}
+
+/* Swipes are ours: the browser neither scrolls nor zooms on them. */
+.is-swipe .archive,
+.is-swipe .topbar {
+  touch-action: none;
+}
+
+/* The manifesto and the list still scroll themselves, but without
+   zooming the page: in swipe mode nothing else could zoom it back out. */
+.is-swipe .info,
+.is-swipe .bike-list,
+.is-swipe .bike-list__items {
+  touch-action: pan-y;
+}
+
+.swipe-arrows {
+  display: none;
+}
+
+/* Up and down, at the right edge in the middle of the screen. */
+.is-swipe .swipe-arrows {
+  position: fixed;
+  top: 50%;
+  right: calc(var(--gutter) - 10px);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transform: translateY(-50%);
+}
+
+.swipe-arrows__button {
+  display: block;
+  padding: 10px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: opacity 0.3s var(--ease-out);
+}
+
+.swipe-arrows__button svg {
+  display: block;
+  width: 14px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+
+.swipe-arrows__button:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
 /* Focused (overlays.js) so the keys scroll the page; no ring for that. */
 .archive,
 .info {
@@ -627,8 +704,14 @@ html.no-snap {
     scroll-snap-stop: always;
   }
 
-  /* NAME_SPOT "middle" (config.js): name and year in the middle of the
-     screen instead of at the bottom. */
+  /* NAME_SPOT "above-bars" (config.js): at the bottom of the screen as it
+     is with the browser bars showing (--screen-small, layout.js), so the
+     bars never cover it; with them hidden there is more room below. */
+  .names-above-bars .bike__caption {
+    bottom: calc(var(--poster-h, 100lvh) - var(--screen-small, 100svh) + var(--gutter));
+  }
+
+  /* NAME_SPOT "middle": name and year in the middle of the screen. */
   .names-middle .bike__caption {
     top: 50%;
     bottom: auto;

@@ -2,8 +2,18 @@
 
 export const MORPH_FROM_SERIF = true;
 export const LOGO_ROLL = false;
-// Phones: the name sits at the bottom of the poster ("bottom") or in the
-// middle of the screen ("middle"), clear of the browser bars.
+// Phones and tablets: "scroll" (the page scrolls and snaps to each
+// poster) or "swipe" (the page never moves, so the browser bars never come
+// and go; a swipe, the arrows, the wheel or the keys slide to the next bike).
+export const PHONE_BROWSING = "scroll";
+// Swipe mode: how far (share of the screen) or how fast (px per ms) a
+// swipe must go to move on, how long the slide after it takes, and
+// whether the up/down arrows show.
+export const SWIPE = { distance: 0.12, speed: 0.35, duration: 0.5, arrows: true };
+// Phones: where the name sits. "bottom": at the bottom of the poster (the
+// browser bars may cover it); "above-bars": at the bottom of the screen
+// as it is with the bars showing, so they never cover it; "middle": in
+// the middle of the screen.
 export const NAME_SPOT = "bottom";
 export const ENTRANCE_FPS = 18;
 export const PLAY_AT = 0.45;

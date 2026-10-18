@@ -25,13 +25,14 @@ ES-Module, darum über einen Server öffnen, nicht per Doppelklick).
 ## Code
 
 - `js/main.js`: Einstieg, verbindet die Module.
-- `js/site/config.js`: Schalter und Zeiten (Morph, Logo-Rollen, 18-fps-Test, Einrasten).
+- `js/site/config.js`: Schalter und Zeiten (Morph, Logo-Rollen, 18-fps-Test, Einrasten, Blättern am Handy: `PHONE_BROWSING`, Namensposition: `NAME_SPOT`).
 - `js/site/build.js`: baut Plakate und Liste aus `js/bikes.js`.
 - `js/site/media.js`: Media Queries (Handy, reduzierte Bewegung).
 - `js/site/fit.js`: passt die Namen an die Breite an.
 - `js/site/layout.js`: gemessene Größen (Liste, Logo).
 - `js/site/entrance.js`: Auftritt von Name und Jahr.
-- `js/site/scroll.js`: das Archiv scrollt selbst (nicht die Seite), Einrasten, Vorladen, wann ein Name startet.
+- `js/site/scroll.js`: die Seite scrollt und rastet ein (im Wisch-Modus bewegt sich stattdessen das Plakat-Band), Vorladen, wann ein Name startet.
+- `js/site/swipe.js`: Wisch-Modus (`PHONE_BROWSING = "swipe"`): Wischen, Pfeile, Mausrad und Tasten blättern ein Rad weiter, die Seite selbst bewegt sich nie.
 - `js/site/overlays.js`: Liste, Manifesto, Lightbox.
 
 ## Räder pflegen

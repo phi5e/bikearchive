@@ -2,7 +2,7 @@
 
 import { LOGO_ROLL } from "./config.js";
 import { fitNames } from "./fit.js";
-import { touchQuery } from "./media.js";
+import { swipes, touchQuery } from "./media.js";
 
 const root = document.documentElement;
 const cssPx = (name, fallback) => parseFloat(getComputedStyle(root).getPropertyValue(name)) || fallback;
@@ -39,32 +39,45 @@ export function createLayout(records) {
 // this width, so the bars just lie on top of them and the snap points
 // never move. Only a new width (turning the phone) or, on a computer, a
 // resized window sizes them again.
-let probe = null;
-function largeScreen() {
-  if (!probe) {
-    probe = document.createElement("div");
-    probe.style.cssText = "position:fixed;top:0;left:0;width:0;height:100vh;height:100lvh;visibility:hidden;pointer-events:none";
-    document.body.appendChild(probe);
+const probes = {};
+// The height of 100lvh or 100svh in px.
+function screenUnit(unit) {
+  if (!probes[unit]) {
+    probes[unit] = document.createElement("div");
+    probes[unit].style.cssText = `position:fixed;top:0;left:0;width:0;height:100vh;height:100${unit};visibility:hidden;pointer-events:none`;
+    document.body.appendChild(probes[unit]);
   }
-  return probe.offsetHeight;
+  return probes[unit].offsetHeight;
 }
 // The tallest height is remembered on the device, so it only has to be
 // found once (Firefox on iPhones reports it only after its bars first
 // hide, which made the posters grow on the first swipe of every visit).
-const remembered = (width) => {
+const remembered = (key, width) => {
   try {
-    return Number(localStorage.getItem(`poster-h-${width}`)) || 0;
+    return Number(localStorage.getItem(`${key}-${width}`)) || 0;
   } catch {
     return 0;
   }
 };
-const remember = (width, height) => {
+const remember = (key, width, height) => {
   try {
-    localStorage.setItem(`poster-h-${width}`, String(height));
+    localStorage.setItem(`${key}-${width}`, String(height));
   } catch {}
 };
 let posterH = 0;
 let posterW = 0;
+// The screen height with the browser bars showing (NAME_SPOT
+// "above-bars"): the smallest seen at this width. Measured rather than
+// taken from 100svh, which Firefox on iPhones changes with its bars.
+let smallH = 0;
+function smallScreen(touch, width, height) {
+  if (!touch) return height;
+  const known = width === posterW && smallH ? smallH : remembered("screen-small", width);
+  // The bars take far less than a third of the screen.
+  const small = Math.min(innerHeight, screenUnit("svh"), known >= innerHeight * 0.7 ? known : Infinity);
+  if (small !== known) remember("screen-small", width, small);
+  return small;
+}
 // Call once the page is at rest and a new width has stopped changing
 // (main.js): turning a phone resizes width and height in separate steps.
 export function sizePosters() {
@@ -73,20 +86,28 @@ export function sizePosters() {
   const touch = touchQuery.matches;
   const width = root.clientWidth;
   let height;
+  // Swipe mode: the page never moves, the posters fill the screen.
+  if (swipes) {
+    height = innerHeight;
   // Same width and roughly the same height (the bars change it by far
   // less than a quarter): only ever grow.
-  if (touch && width === posterW && innerHeight > posterH * 0.75) {
+  } else if (touch && width === posterW && innerHeight > posterH * 0.75) {
     height = Math.max(posterH, innerHeight);
   } else if (touch) {
     // A remembered height only counts if it fits this screen.
-    const saved = remembered(width);
-    height = Math.max(innerHeight, largeScreen(), saved <= innerHeight * 1.3 ? saved : 0);
+    const saved = remembered("poster-h", width);
+    height = Math.max(innerHeight, screenUnit("lvh"), saved <= innerHeight * 1.3 ? saved : 0);
   } else {
     height = innerHeight;
   }
+  const small = smallScreen(touch, width, height);
+  if (small !== smallH) {
+    smallH = small;
+    root.style.setProperty("--screen-small", `${small}px`);
+  }
   posterW = width;
   if (height === posterH) return;
-  if (touch) remember(width, height);
+  if (touch && !swipes) remember("poster-h", width, height);
   // Stay on the same poster when the height does change.
   const page = document.scrollingElement || root;
   const index = posterH ? Math.round(page.scrollTop / posterH) : 0;
