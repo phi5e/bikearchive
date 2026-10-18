@@ -2,12 +2,14 @@
 
 import { buildArchive } from "./site/build.js";
 import { createEntrance } from "./site/entrance.js";
+import { NAME_SPOT } from "./site/config.js";
 import { createLayout, sizePosters } from "./site/layout.js";
 import { reduceMotion, waitsForFinger } from "./site/media.js";
 import { setupOverlays } from "./site/overlays.js";
 import { setupScroll } from "./site/scroll.js";
 
 const archive = document.getElementById("archive");
+document.documentElement.classList.toggle("names-middle", NAME_SPOT === "middle");
 const records = buildArchive(window.BIKES || [], archive, document.getElementById("bike-list-items"));
 const layout = createLayout(records);
 const motion = !!window.gsap && !reduceMotion;

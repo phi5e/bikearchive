@@ -193,8 +193,9 @@ html {
 }
 
 /* While a jump from the list glides there (scroll.js), snapping would
-   catch every frame. */
-html.is-gliding {
+   catch every frame. On touch screens it stays off after the glide until
+   the next swipe starts. */
+html.no-snap {
   scroll-snap-type: none;
 }
 
@@ -624,6 +625,14 @@ html.is-gliding {
 
   .bike__snap {
     scroll-snap-stop: always;
+  }
+
+  /* NAME_SPOT "middle" (config.js): name and year in the middle of the
+     screen instead of at the bottom. */
+  .names-middle .bike__caption {
+    top: 50%;
+    bottom: auto;
+    transform: translateY(-50%);
   }
 
   .bike__poster {

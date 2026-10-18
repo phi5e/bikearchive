@@ -2,6 +2,9 @@
 
 export const MORPH_FROM_SERIF = true;
 export const LOGO_ROLL = false;
+// Phones: the name sits at the bottom of the poster ("bottom") or in the
+// middle of the screen ("middle"), clear of the browser bars.
+export const NAME_SPOT = "bottom";
 export const ENTRANCE_FPS = 18;
 export const PLAY_AT = 0.45;
 export const SETTLE_MS = 120;

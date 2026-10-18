@@ -3,7 +3,7 @@
 // it), so phone browsers can shrink their bars while scrolling.
 
 import { GLIDE, PLAY_AT, SETTLE_MS } from "./config.js";
-import { isPhone, reduceMotion, waitsForFinger } from "./media.js";
+import { isPhone, reduceMotion, touchQuery, waitsForFinger } from "./media.js";
 
 const PRELOAD_AHEAD = 2;
 // A poster counts as snapped when it is within this share of a screen
@@ -11,6 +11,19 @@ const PRELOAD_AHEAD = 2;
 const SNAP_SLACK = 0.01;
 
 const page = document.scrollingElement || document.documentElement;
+// Snapping is turned off while the page glides to a bike from the list
+// (it would catch every frame). iPhone browsers only learn which poster
+// the page rests on when a finger lets go of it after a drag; snapping
+// that came back after a glide made them jump back to the poster before
+// it. So on touch screens it stays off until the page is being dragged,
+// and while it is off, settle() lands the page on a poster itself.
+const snapOff = () => page.classList.add("no-snap");
+const snapOn = () => page.classList.remove("no-snap");
+const snapIsOff = () => page.classList.contains("no-snap");
+// A drag that ends this soon after snapping came back (or before the
+// browser can have taken the snap points in, two frames) may have ended
+// without them; snapping goes off again then.
+const FLICK_MS = 100;
 
 // Load and decode a poster before it scrolls in, so it never appears late.
 function warm(rec) {
@@ -34,6 +47,11 @@ export function setupScroll({ records, entrances }) {
   let settleTimer = 0;
   let glide = null;
   let lastScroll = 0;
+  let snapBackAt = -Infinity;
+  let snapTakenIn = true;
+  // Where the page was last put by a glide or a jump, so the scroll
+  // events those cause aren't taken for a drag.
+  let placedAt = NaN;
   // Work that must wait until no finger is down and the page has stopped.
   const waiting = new Set();
   // Posters are as tall as the screen with the browser bars hidden, so
@@ -74,6 +92,15 @@ export function setupScroll({ records, entrances }) {
     });
     setCurrent(best);
   }
+  // With snapping off, the poster to land on: the next one in the
+  // direction the page was moved (wheel, keys, a flick), or else the one
+  // mostly on screen.
+  function landingFor(rec) {
+    const top = page.scrollTop;
+    if (top > placedAt + 1) return (records.find((r) => restingTop(r.section) > top) || records[records.length - 1]).section;
+    if (top < placedAt - 1) return (records.findLast((r) => restingTop(r.section) < top) || records[0]).section;
+    return rec.section;
+  }
   function settle() {
     clearTimeout(settleTimer);
     if (touches > 0 || glide) return;
@@ -86,7 +113,10 @@ export function setupScroll({ records, entrances }) {
     update();
     const rec = records[current];
     if (!rec) return;
-    if (Math.abs(restingTop(rec.section) - page.scrollTop) > posterHeight() * SNAP_SLACK) return;
+    if (Math.abs(restingTop(rec.section) - page.scrollTop) > posterHeight() * SNAP_SLACK) {
+      if (snapIsOff()) jumpTo(landingFor(rec));
+      return;
+    }
     jumping = false;
     restIndex = current;
     entrances?.[current].play();
@@ -97,6 +127,14 @@ export function setupScroll({ records, entrances }) {
   };
   window.addEventListener("scroll", () => {
     lastScroll = performance.now();
+    // Moving with a finger down (and no glide) is a drag: snapping can
+    // come back now, the browser picks the poster when the finger lets go.
+    if (touches > 0 && !glide && snapIsOff() && Math.abs(page.scrollTop - placedAt) > 1) {
+      snapOn();
+      snapBackAt = lastScroll;
+      snapTakenIn = false;
+      requestAnimationFrame(() => requestAnimationFrame(() => (snapTakenIn = true)));
+    }
     if (!queued) {
       queued = true;
       requestAnimationFrame(update);
@@ -104,24 +142,67 @@ export function setupScroll({ records, entrances }) {
     settleSoon();
   }, { passive: true });
   if ("onscrollend" in window) window.addEventListener("scrollend", settle);
+  // Mouse, wheel and keys stop a glide where it is. A touch only does
+  // once it moves (on touch screens a pen counts as a finger).
   const stopGlide = (e) => {
-    if (!glide) return;
+    const finger = e?.pointerType === "touch" || (e?.pointerType === "pen" && touchQuery.matches);
+    if (!glide || finger) return;
     glide.kill();
     glide = null;
-    const finger = touches > 0 || e?.pointerType === "touch" || e?.type === "touchstart";
-    if (!finger) page.classList.remove("is-gliding");
+    if (touchQuery.matches) settleSoon();
+    else snapOn();
   };
   ["wheel", "pointerdown", "keydown"].forEach((type) => window.addEventListener(type, stopGlide, { passive: true }));
   const onTouch = (e) => {
     touches = e.touches.length;
-    if (e.type === "touchstart") stopGlide(e);
-    else if (touches === 0 && !glide) page.classList.remove("is-gliding");
-    if (touches === 0) settleSoon();
+    if (touches > 0) return;
+    if (!snapTakenIn || performance.now() - snapBackAt < FLICK_MS) snapOff();
+    settleSoon();
   };
   ["touchstart", "touchend", "touchcancel"].forEach((type) => window.addEventListener(type, onTouch, { passive: true }));
+  // A finger moving on the page (not on the list or the manifesto, which
+  // scroll themselves) takes over from a glide.
+  window.addEventListener("touchmove", (e) => {
+    if (!glide || e.target.closest?.(".bike-list, .info")) return;
+    glide.kill();
+    glide = null;
+  }, { passive: true });
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) touches = 0;
   });
+  // Glide to a poster without the ones on the way playing.
+  function jumpTo(section) {
+    stopGlide();
+    jumping = true;
+    const i = records.findIndex((r) => r.section === section);
+    for (let k = i - 1; k <= i + 1; k++) warm(records[k]);
+    const to = restingTop(section);
+    const posters = Math.abs(to - page.scrollTop) / posterHeight();
+    if (touchQuery.matches) snapOff();
+    if (reduceMotion || !window.gsap || posters < 0.01) {
+      page.scrollTop = to;
+      placedAt = page.scrollTop;
+      settleSoon();
+      return;
+    }
+    snapOff();
+    glide = gsap.to(page, {
+      scrollTop: to,
+      duration: Math.min(GLIDE.max, GLIDE.base + GLIDE.perPoster * posters),
+      ease: "power3.inOut",
+      onUpdate() {
+        placedAt = page.scrollTop;
+      },
+      onComplete() {
+        glide = null;
+        // The posters may have been resized on the way.
+        page.scrollTop = restingTop(section);
+        placedAt = page.scrollTop;
+        if (!touchQuery.matches) snapOn();
+        settle();
+      }
+    });
+  }
   return {
     update,
     atRest(job) {
@@ -135,33 +216,6 @@ export function setupScroll({ records, entrances }) {
       armed = true;
       settle();
     },
-    // Glide to a poster without the ones on the way playing.
-    jumpTo(section) {
-      stopGlide();
-      jumping = true;
-      const i = records.findIndex((r) => r.section === section);
-      for (let k = i - 1; k <= i + 1; k++) warm(records[k]);
-      const to = restingTop(section);
-      const posters = Math.abs(to - page.scrollTop) / posterHeight();
-      if (reduceMotion || !window.gsap || posters < 0.01) {
-        page.scrollTop = to;
-        settleSoon();
-        return;
-      }
-      // Snapping would catch every frame of the glide.
-      page.classList.add("is-gliding");
-      glide = gsap.to(page, {
-        scrollTop: to,
-        duration: Math.min(GLIDE.max, GLIDE.base + GLIDE.perPoster * posters),
-        ease: "power3.inOut",
-        onComplete() {
-          glide = null;
-          // The posters may have been resized on the way.
-          page.scrollTop = restingTop(section);
-          page.classList.remove("is-gliding");
-          settle();
-        }
-      });
-    }
+    jumpTo
   };
 }
