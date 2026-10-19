@@ -102,9 +102,17 @@ ul {
   left: var(--gutter);
   width: var(--logo-size);
   height: var(--logo-size);
-  /* Turns slowly in place. The link turns, not the svg: browsers redraw a
-     turning svg (and lay out its text again) on every frame, which held
-     up swipes and the name entrance; a turning link is only moved. */
+}
+
+/* Turns slowly in place. A span around the svg turns, not the svg itself:
+   browsers redraw a turning svg (and lay out its text again) on every
+   frame, which held up swipes and the name entrance; a turning span is
+   only moved. The link around it stays put, so its focus ring and tap
+   area don't turn. */
+.logo-spin {
+  display: block;
+  width: 100%;
+  height: 100%;
   animation: logo-spin 30s linear infinite;
 }
 
@@ -129,6 +137,10 @@ ul {
    on with LOGO_ROLL in config.js; layout.js then adds adds .topbar--roll. */
 .topbar--roll .topbar__logo {
   animation: logo-roll var(--roll-t, 10s) var(--roll-ease) infinite alternate;
+}
+
+.topbar--roll .logo-spin {
+  animation: none;
 }
 
 .topbar--roll .logo-ring {
@@ -343,10 +355,11 @@ html.is-swipe {
   will-change: transform;
 }
 
-/* Names of posters out of view (scroll.js toggles .is-near) aren't drawn
-   at all: hundreds of waiting letters made every frame of a swipe and of
-   an entrance slower. */
-.has-motion .bike:not(.is-near) .bike__caption {
+/* The letters of posters out of view (scroll.js toggles .is-near) aren't
+   drawn at all: hundreds of waiting letters made every frame of a swipe
+   and of an entrance slower. Only the letters, which screen readers skip
+   anyway; the captions' labels stay readable. */
+.has-motion .bike:not(.is-near) :is(.bike__ychar, .bike__name-inner) {
   visibility: hidden;
 }
 
@@ -856,6 +869,7 @@ html.is-swipe {
 
 @media (prefers-reduced-motion: reduce) {
   .topbar__logo,
+  .logo-spin,
   .logo-ring,
   .topbar--roll .topbar__logo,
   .topbar--roll .logo-ring {
