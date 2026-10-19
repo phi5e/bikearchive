@@ -23,6 +23,15 @@ und verschmelzen dabei zur breiten Sans. Abschalten: in `js/site/config.js`
 Plain HTML/CSS/JS, kein Build. `index.html` hosten (die Skripte sind
 ES-Module, darum über einen Server öffnen, nicht per Doppelklick).
 
+## Live und Test
+
+Netlify baut den Branch `claude/bike-archive-page-y0w7o8` als Live-Seite
+(astallabici.de; jedes Deploy kostet Credits). Der Branch
+`claude/mobile-scroll-fix-h5rz9g` ist als Branch-Deploy eingetragen: jeder
+Push dorthin baut einen Testlink (`claude-mobile-scroll-fix-h5rz9g--…netlify.app`,
+in Netlify unter Deploys), der in jedem Browser läuft und keine
+Deploy-Credits kostet.
+
 ## Code
 
 - `js/main.js`: Einstieg, verbindet die Module.
