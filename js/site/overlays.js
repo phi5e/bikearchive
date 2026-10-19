@@ -22,7 +22,9 @@ export function setupOverlays({ records, stage, archive }) {
       listItems.scrollTop = 0;
     } else if (open) {
       const li = listItems.querySelector(".is-current") || listItems.children[Math.floor(listItems.children.length / 2)];
-      if (li) listNav.scrollTop = li.offsetTop + li.offsetHeight / 2 - listNav.clientHeight / 2;
+      // The current bike on the toggle's line (--list-up from the top).
+      const line = parseFloat(getComputedStyle(listNav).getPropertyValue("--list-up")) || listNav.clientHeight / 2;
+      if (li) listNav.scrollTop = li.offsetTop + li.offsetHeight / 2 - line;
     }
     body.classList.toggle("is-list-open", open);
     if (!open) refocus();

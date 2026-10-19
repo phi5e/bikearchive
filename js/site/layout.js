@@ -28,8 +28,12 @@ export function createLayout(records) {
     const tallest = Math.max(0, ...captions.map((c) => c.offsetHeight));
     const gutter = captions[0] ? parseFloat(getComputedStyle(captions[0]).bottom) : 0;
     const listBottom = Math.ceil(tallest + gutter + 16);
-    const half = Math.max(80, Math.min(innerHeight / 2 - cssPx("--topbar-h", 56) - 16, innerHeight / 2 - listBottom));
-    root.style.setProperty("--list-half", `${Math.floor(half)}px`);
+    // The list reaches up to the menu and down to the tallest name (two
+    // lines high), so it can reach further up than down.
+    const up = Math.max(80, innerHeight / 2 - cssPx("--topbar-h", 56) - 16);
+    const down = Math.max(80, Math.min(up, innerHeight / 2 - listBottom));
+    root.style.setProperty("--list-up", `${Math.floor(up)}px`);
+    root.style.setProperty("--list-down", `${Math.floor(down)}px`);
   };
 }
 

@@ -2,7 +2,7 @@
 
 Eine Seite, ein Plakat pro Bildschirm; das Plakat ist 80% der
 Bildschirmhöhe hoch, mittig zwischen Menü und unterem Rand. Unten links steht der
-Rahmenname (mindestens zweizeilig: das erste Wort, die Marke, steht allein
+Rahmenname (bei zwei Wörtern oder mehr mindestens zweizeilig: das erste Wort, die Marke, steht allein
 in der ersten Zeile, der Rest darunter; skaliert mit der Breite,
 max. 160px, Archivo Expanded Black), darüber das Jahr (13.5px). Beim
 Scrollen (in beide Richtungen) gleitet jeder Buchstabe einzeln von rechts

@@ -516,21 +516,24 @@ html.is-swipe {
 
 .bike-list {
   position: fixed;
-  /* Centred on the toggle's line, as far up as down (--list-half, set in
-     layout.js). The padding lets the first and last names reach the line. */
-  top: calc(50% - var(--list-half, 200px));
-  height: calc(var(--list-half, 200px) * 2);
+  /* Around the toggle's line, --list-up above it and --list-down below
+     (set in layout.js). The padding lets the first and last names reach
+     the line. */
+  top: calc(50% - var(--list-up, 200px));
+  height: calc(var(--list-up, 200px) + var(--list-down, 200px));
   left: calc(max(var(--gutter), 24px) - 20px + var(--toggle-w, 90px) + 24px);
   right: var(--gutter);
   z-index: 15;
   overflow-y: auto;
-  padding: calc(var(--list-half, 200px) - var(--list-size) * 0.65) 0;
+  padding: calc(var(--list-up, 200px) - var(--list-size) * 0.65) 0 calc(var(--list-down, 200px) - var(--list-size) * 0.65);
   pointer-events: none;
   visibility: hidden;
   transition: visibility 0s linear 0.7s;
-  /* Feathered at both ends. */
-  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 96px, #000 calc(100% - 96px), transparent);
-  mask-image: linear-gradient(to bottom, transparent, #000 96px, #000 calc(100% - 96px), transparent);
+  /* Feathered at both ends, never as far as the toggle's line. */
+  --fade-up: min(96px, var(--list-up, 200px) * 0.6);
+  --fade-down: min(96px, var(--list-down, 200px) * 0.6);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 var(--fade-up), #000 calc(100% - var(--fade-down)), transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--fade-up), #000 calc(100% - var(--fade-down)), transparent);
   scrollbar-width: none;
 }
 
