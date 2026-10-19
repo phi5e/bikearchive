@@ -26,10 +26,15 @@ function buildName(name, text) {
   const chars = [];
   const words = [];
   let word = null;
+  let broken = false;
   Array.from(text).forEach((ch) => {
     if (ch === " ") {
+      // The first word (the make) gets a line of its own, so a name of
+      // two words or more always takes at least two lines.
+      const breakHere = !!word && !broken;
+      broken ||= breakHere;
       word = null;
-      inner.appendChild(document.createTextNode(" "));
+      inner.appendChild(breakHere ? el("br") : document.createTextNode(" "));
       return;
     }
     const slot = el("span", "bike__char");

@@ -2,13 +2,14 @@
 
 Eine Seite, ein Plakat pro Bildschirm; das Plakat ist 80% der
 Bildschirmhöhe hoch, mittig zwischen Menü und unterem Rand. Unten links steht der
-Rahmenname (immer einzeilig, skaliert mit der Breite,
+Rahmenname (mindestens zweizeilig: das erste Wort, die Marke, steht allein
+in der ersten Zeile, der Rest darunter; skaliert mit der Breite,
 max. 160px, Archivo Expanded Black), darüber das Jahr (13.5px). Beim
 Scrollen (in beide Richtungen) gleitet jeder Buchstabe einzeln von rechts
 in seinen Platz, wie hinter einem unsichtbaren Vorhang hervor (vom letzten
 zum ersten). Gleichzeitig läuft eine Welle einmal von rechts nach links
-über den Namen und dehnt und staucht einzelne Buchstaben; die Außenkanten
-bleiben dabei fest (GSAP, `js/vendor/`). Springt man 2+ Plakate weiter
+über den Namen, Zeile für Zeile von unten nach oben, und dehnt und staucht
+einzelne Buchstaben; die Außenkanten jeder Zeile bleiben dabei fest (GSAP, `js/vendor/`). Springt man 2+ Plakate weiter
 (schnelles Scrollen, Sprung aus der Liste), animieren die überflogenen
 Namen nicht; der Name am Ziel startet kurz nachdem das Scrollen stoppt. Links mittig öffnet „view list“
 die Liste aller Räder, mittig auf dieser Linie (der aktuelle Name steht
@@ -25,14 +26,14 @@ ES-Module, darum über einen Server öffnen, nicht per Doppelklick).
 ## Code
 
 - `js/main.js`: Einstieg, verbindet die Module.
-- `js/site/config.js`: Schalter und Zeiten (Morph, Logo-Rollen, 18-fps-Test, Einrasten, Blättern am Handy: `PHONE_BROWSING`, Namensposition: `NAME_SPOT`).
+- `js/site/config.js`: Schalter und Zeiten (Morph, Logo-Rollen, 18-fps-Test, Einrasten, Blättern am Handy: `PHONE_BROWSING`, getrennt für Safari und alle anderen Browser, Namensposition: `NAME_SPOT`).
 - `js/site/build.js`: baut Plakate und Liste aus `js/bikes.js`.
-- `js/site/media.js`: Media Queries (Handy, reduzierte Bewegung).
+- `js/site/media.js`: Media Queries (Handy, reduzierte Bewegung), erkennt Safari.
 - `js/site/fit.js`: passt die Namen an die Breite an.
 - `js/site/layout.js`: gemessene Größen (Liste, Logo).
 - `js/site/entrance.js`: Auftritt von Name und Jahr.
 - `js/site/scroll.js`: die Seite scrollt und rastet ein (im Wisch-Modus bewegt sich stattdessen das Plakat-Band), Vorladen, wann ein Name startet.
-- `js/site/swipe.js`: Wisch-Modus (`PHONE_BROWSING = "swipe"`): Wischen, Pfeile, Mausrad und Tasten blättern ein Rad weiter, die Seite selbst bewegt sich nie.
+- `js/site/swipe.js`: Wisch-Modus (`"swipe"` in `PHONE_BROWSING`, im Moment für alle Browser außer Safari): Wischen, Pfeile, Mausrad und Tasten blättern ein Rad weiter, die Seite selbst bewegt sich nie.
 - `js/site/overlays.js`: Liste, Manifesto, Lightbox.
 
 ## Räder pflegen

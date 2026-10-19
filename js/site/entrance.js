@@ -1,8 +1,7 @@
 // Name and year entrance: letters slide in from behind a curtain while a
-// wave runs over the word (desktop) and the serif melts into the sans.
+// wave runs over the name, line by line, and the serif melts into the sans.
 
 import { ENTRANCE_FPS, MORPH_FROM_SERIF } from "./config.js";
-import { isPhone } from "./media.js";
 
 const SLIDE = 0.75;
 const STAGGER = 0.045;
@@ -71,12 +70,20 @@ export function createEntrance(rec, blurDev) {
       acc += w;
       return m;
     });
+    // The lines the name wraps onto: the wave keeps each one's width.
+    const lineOf = [];
+    let lines = 0;
+    chars.forEach((c, i) => {
+      if (i > 0 && Math.abs(c.offsetTop - chars[i - 1].offsetTop) > 1) lines++;
+      lineOf.push(lines);
+    });
+    const lineWidths = new Array(lines + 1).fill(0);
+    chars.forEach((_, i) => (lineWidths[lineOf[i]] += widths[i]));
     const sigma = Math.max(0.1, 1.4 / n);
     const starts = chars.map((_, i) => (n - 1 - i) * STAGGER);
     const duration = Math.max((n - 1) * STAGGER + SLIDE, 0.6);
     const span = 1 + 2 * LEAD;
     const fontSize = parseFloat(getComputedStyle(name).fontSize) || 160;
-    const waves = !isPhone();
     serifs.forEach((s, i) => {
       s.style.transform = `scaleX(${(widths[i] / (s.offsetWidth || 1)).toFixed(4)})`;
     });
@@ -94,13 +101,15 @@ export function createEntrance(rec, blurDev) {
       });
       const life = clamp01(t / duration);
       const centre = 1 + LEAD - span * legEase(life);
-      const amp = waves ? 2.8 * Math.sin(Math.PI * life ** 0.8) ** 2 : 0;
+      const amp = 2.8 * Math.sin(Math.PI * life ** 0.8) ** 2;
       const raw = centres.map((m) => 1 + amp * Math.exp(-((m - centre) ** 2) / (2 * sigma * sigma)));
-      const k = total / raw.reduce((a, r, i) => a + r * widths[i], 0);
+      const stretched = new Array(lines + 1).fill(0);
+      raw.forEach((r, i) => (stretched[lineOf[i]] += r * widths[i]));
       let x = 0;
       let offset = 0;
       chars.forEach((c, i) => {
-        const sx = raw[i] * k;
+        if (i > 0 && lineOf[i] !== lineOf[i - 1]) x = offset = 0;
+        const sx = raw[i] * lineWidths[lineOf[i]] / stretched[lineOf[i]];
         c.style.transform = amp > 0.001 ? `translate3d(${(x - offset).toFixed(2)}px, 0, 0) scaleX(${sx.toFixed(4)})` : "";
         x += widths[i] * sx;
         offset += widths[i];

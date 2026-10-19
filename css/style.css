@@ -360,8 +360,9 @@ html.is-swipe {
   margin-bottom: 4px;
 }
 
-/* Font size is fitted in fit.js so the name always fills at most the
-   width on a single line, capped at --name-max. */
+/* The make has a line of its own (build.js), the rest is on the next.
+   fit.js sizes the name so the longer line fills at most the width,
+   capped at --name-max, and spaces the lines like on a phone. */
 .bike__name {
   display: block;
   font-family: var(--font-display);
@@ -726,9 +727,10 @@ html.is-swipe {
     object-fit: cover;
   }
 
-  /* Names at 60% of the desktop size, wrapping between words. fit.js
-     sets the line height so the caps of one line end 5px above the next
-     (and pads the top so the first line's caps aren't cut off). */
+  /* Names at 60% of the desktop size, wrapping between words (the make
+     always on its own line). fit.js sets the line height so the caps of
+     one line end 5px above the next (and pads the top so the first
+     line's caps aren't cut off). */
   .bike__name {
     white-space: normal;
     line-height: 0.8;

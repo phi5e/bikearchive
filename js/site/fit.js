@@ -18,28 +18,40 @@ function nameMetrics(el) {
   return found;
 }
 const floor2 = (n) => Math.floor(n * 100) / 100;
+// The caps of one line end `gap` px above the caps of the next; the top
+// is padded so the first line's caps aren't cut off.
+function spaceLines(name, size, gap) {
+  const m = nameMetrics(name);
+  const lineHeight = m.cap * size + gap;
+  name.style.lineHeight = `${lineHeight.toFixed(2)}px`;
+  const capTop = (lineHeight - (m.ascent + m.descent) * size) / 2 + (m.ascent - m.cap) * size;
+  name.style.paddingTop = capTop < 0 ? `${Math.ceil(-capTop)}px` : "";
+}
+// Phones: 60% of the desktop size, wrapping between words; smaller only
+// if the longest word doesn't fit.
+const PHONE_SHARE = 0.6;
+const PHONE_GAP = 5;
 function fitPhone(rec, cap) {
   const { name, words } = rec;
-  const size = cap * 0.6;
+  const size = cap * PHONE_SHARE;
   name.style.fontSize = `${size}px`;
   const available = name.parentElement.clientWidth;
   const widest = Math.max(1, ...words.map((w) => w.offsetWidth));
   const fitted = floor2(widest > available ? size * (available / widest) : size);
   name.style.fontSize = `${fitted}px`;
-  const m = nameMetrics(name);
-  const lineHeight = m.cap * fitted + 5;
-  name.style.lineHeight = `${lineHeight.toFixed(2)}px`;
-  const capTop = (lineHeight - (m.ascent + m.descent) * fitted) / 2 + (m.ascent - m.cap) * fitted;
-  name.style.paddingTop = capTop < 0 ? `${Math.ceil(-capTop)}px` : "";
+  spaceLines(name, fitted, PHONE_GAP);
 }
+// Desktop: the make on one line, the rest on the next, as big as the
+// longer line allows (capped); the lines as far apart as on a phone,
+// scaled up with the size.
 function fitDesktop(rec, cap) {
   const { name, inner } = rec;
-  name.style.lineHeight = "";
-  name.style.paddingTop = "";
   name.style.fontSize = `${cap}px`;
   const available = name.parentElement.clientWidth;
   const needed = inner.offsetWidth;
-  name.style.fontSize = `${floor2(needed > available ? cap * (available / needed) : cap)}px`;
+  const fitted = floor2(needed > available ? cap * (available / needed) : cap);
+  name.style.fontSize = `${fitted}px`;
+  spaceLines(name, fitted, PHONE_GAP * fitted / (cap * PHONE_SHARE));
 }
 export function fitNames(records) {
   const cap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--name-max")) || 160;

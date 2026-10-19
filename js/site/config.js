@@ -5,7 +5,8 @@ export const LOGO_ROLL = false;
 // Phones and tablets: "scroll" (the page scrolls and snaps to each
 // poster) or "swipe" (the page never moves, so the browser bars never come
 // and go; a swipe, the arrows, the wheel or the keys slide to the next bike).
-export const PHONE_BROWSING = "scroll";
+// Safari (iPhone, iPad) and every other browser each get their own.
+export const PHONE_BROWSING = { safari: "scroll", other: "swipe" };
 // Swipe mode: how far (share of the screen) or how fast (px per ms) a
 // swipe must go to move on, how long the slide after it takes, and
 // whether the up/down arrows show.
