@@ -8,7 +8,8 @@ const STAGGER = 0.045;
 const LEAD = 0.18;
 const MORPH_AHEAD = 0.12;
 const MORPH_SPAN = 0.32;
-const HIDDEN = "translate3d(110%, 0, 0)";
+// Flat (2d), so waiting letters need no layer of their own.
+const HIDDEN = "translateX(110%)";
 const frameScale = ENTRANCE_FPS ? ENTRANCE_FPS / 60 : 1;
 const legEase = (p) => 0.7 * p + 0.3 * (1 - (1 - p) ** 4);
 const clamp01 = (v) => Math.min(Math.max(v, 0), 1);

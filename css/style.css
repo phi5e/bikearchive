@@ -102,6 +102,10 @@ ul {
   left: var(--gutter);
   width: var(--logo-size);
   height: var(--logo-size);
+  /* Turns slowly in place. The link turns, not the svg: browsers redraw a
+     turning svg (and lay out its text again) on every frame, which held
+     up swipes and the name entrance; a turning link is only moved. */
+  animation: logo-spin 30s linear infinite;
 }
 
 .logo-ring {
@@ -113,8 +117,6 @@ ul {
   font-family: var(--font);
   font-size: 15px;
   font-weight: 500;
-  /* Turns slowly in place. */
-  animation: logo-spin 30s linear infinite;
 }
 
 @keyframes logo-spin {
@@ -341,6 +343,13 @@ html.is-swipe {
   will-change: transform;
 }
 
+/* Names of posters out of view (scroll.js toggles .is-near) aren't drawn
+   at all: hundreds of waiting letters made every frame of a swipe and of
+   an entrance slower. */
+.has-motion .bike:not(.is-near) .bike__caption {
+  visibility: hidden;
+}
+
 .bike__caption {
   position: absolute;
   left: var(--gutter);
@@ -397,7 +406,6 @@ html.is-swipe {
   white-space: pre;
   transform-origin: 0 100%;
   clip-path: inset(-100% 0 -100% 0);
-  will-change: transform;
 }
 
 /* The year's digits: masked slots like the name's letters. */
@@ -406,14 +414,14 @@ html.is-swipe {
   clip-path: inset(-100% 0 -100% 0);
 }
 
+/* No will-change on the letters: a layer for each of them cost more than
+   it saved. They only become layers while they move. */
 .bike__yglyph {
   display: inline-block;
-  will-change: transform;
 }
 
 .bike__glyph {
   display: inline-block;
-  will-change: transform;
 }
 
 /* Morph variant (MORPH_FROM_SERIF in config.js): the sans and the serif
