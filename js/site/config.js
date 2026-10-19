@@ -16,7 +16,9 @@ export const SWIPE = { distance: 0.12, speed: 0.35, duration: 0.5, arrows: true 
 // as it is with the bars showing, so they never cover it; "middle": in
 // the middle of the screen.
 export const NAME_SPOT = "bottom";
-export const ENTRANCE_FPS = 18;
+// Frames per second of the name and year entrance (a number steps it, like
+// the earlier 18 fps test); null runs it smoothly at the screen's rate.
+export const ENTRANCE_FPS = null;
 export const PLAY_AT = 0.45;
 export const SETTLE_MS = 120;
 export const LIST_FADE_MS = 600;

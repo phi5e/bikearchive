@@ -26,7 +26,7 @@ ES-Module, darum über einen Server öffnen, nicht per Doppelklick).
 ## Code
 
 - `js/main.js`: Einstieg, verbindet die Module.
-- `js/site/config.js`: Schalter und Zeiten (Morph, Logo-Rollen, 18-fps-Test, Einrasten, Blättern am Handy: `PHONE_BROWSING`, getrennt für Safari und alle anderen Browser, Namensposition: `NAME_SPOT`).
+- `js/site/config.js`: Schalter und Zeiten (Morph, Logo-Rollen, Bildrate des Namens (`ENTRANCE_FPS`, im Moment ohne Limit), Einrasten, Blättern am Handy: `PHONE_BROWSING`, getrennt für Safari und alle anderen Browser, Namensposition: `NAME_SPOT`).
 - `js/site/build.js`: baut Plakate und Liste aus `js/bikes.js`.
 - `js/site/media.js`: Media Queries (Handy, reduzierte Bewegung), erkennt Safari.
 - `js/site/fit.js`: passt die Namen an die Breite an.
