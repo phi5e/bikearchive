@@ -313,7 +313,8 @@ html.is-swipe {
 /* The poster's own colours behind it (POSTER_BG, colors.js): a gradient
    from the top left to the bottom right; in "median" mode both ends are
    the same colour. Registered as colours so they can fade in once the
-   image has loaded; they start as the plain background (--bg). */
+   image has loaded; they start as the plain background (--bg; the
+   initial values only stand in where var() can't be used). */
 @property --bg-from {
   syntax: "<color>";
   inherits: false;
@@ -327,6 +328,8 @@ html.is-swipe {
 }
 
 .poster-bg .bike {
+  --bg-from: var(--bg);
+  --bg-to: var(--bg);
   background-image: linear-gradient(to bottom right, var(--bg-from), var(--bg-to));
   transition: --bg-from 0.6s var(--ease-out), --bg-to 0.6s var(--ease-out);
 }

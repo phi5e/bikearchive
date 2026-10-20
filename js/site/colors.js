@@ -93,8 +93,10 @@ function paint(rec) {
   const [start, end] = ends;
   rec.section.style.setProperty("--bg-from", `rgb(${start.join(" ")})`);
   rec.section.style.setProperty("--bg-to", `rgb(${end.join(" ")})`);
-  // The ink suits the middle of the gradient, where name and menu mostly sit.
-  rec.section.classList.toggle("bike--dark", (luminance(start) + luminance(end)) / 2 < DARK_BELOW);
+  // The ink suits the middle of the gradient (mixed as the browser mixes
+  // it), where name and menu mostly sit.
+  const middle = start.map((v, ch) => Math.round((v + end[ch]) / 2));
+  rec.section.classList.toggle("bike--dark", luminance(middle) < DARK_BELOW);
   if (rec.section.classList.contains("is-current")) syncInk(rec.section);
 }
 // Read only with the page at rest (never mid-swipe), from an image that
