@@ -43,7 +43,7 @@ Deploy-Credits kostet.
 - `js/site/entrance.js`: Auftritt von Name und Jahr.
 - `js/site/scroll.js`: die Seite scrollt und rastet ein (im Wisch-Modus bewegt sich stattdessen das Plakat-Band), Vorladen, wann ein Name startet.
 - `js/site/swipe.js`: Wisch-Modus (`"swipe"` in `PHONE_BROWSING`, im Moment für alle Browser außer Safari): Wischen, Pfeile, Mausrad und Tasten blättern ein Rad weiter, die Seite selbst bewegt sich nie.
-- `js/site/colors.js`: hinter jedem Plakat seine Medianfarbe (aus dem Bild gelesen, sobald es geladen ist und die Seite ruht); auf dunklen Farben wird die Schrift weiß. Nicht am Handy, dort füllt das Bild den ganzen Bildschirm.
+- `js/site/colors.js`: hinter jedem Plakat seine eigenen Farben (aus dem Bild gelesen, sobald es geladen ist und die Seite ruht): `POSTER_BG = "gradient"` verläuft von dunkel oben links nach hell unten rechts (welche Pixel: `GRADIENT`), `"median"` ist eine Farbe, die Medianfarbe. Auf dunklen Farben wird die Schrift weiß. Nicht am Handy, dort füllt das Bild den ganzen Bildschirm.
 - `js/site/overlays.js`: Liste, Manifesto, Lightbox.
 
 ## Räder pflegen

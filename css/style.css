@@ -308,9 +308,27 @@ html.is-swipe {
   /* Only clip sideways (wide posters on phones). Vertically nothing is
      clipped, so the drifting names can lie over the neighbouring posters. */
   overflow-x: clip;
-  /* The poster's median colour (POSTER_BG, colors.js) fades in once the
-     image has loaded. */
-  transition: background-color 0.6s var(--ease-out);
+}
+
+/* The poster's own colours behind it (POSTER_BG, colors.js): a gradient
+   from the top left to the bottom right; in "median" mode both ends are
+   the same colour. Registered as colours so they can fade in once the
+   image has loaded; they start as the plain background (--bg). */
+@property --bg-from {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: #a8a096;
+}
+
+@property --bg-to {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: #a8a096;
+}
+
+.poster-bg .bike {
+  background-image: linear-gradient(to bottom right, var(--bg-from), var(--bg-to));
+  transition: --bg-from 0.6s var(--ease-out), --bg-to 0.6s var(--ease-out);
 }
 
 /* On a dark poster colour the ink turns white (colors.js): that poster's
