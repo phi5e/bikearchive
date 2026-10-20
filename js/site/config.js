@@ -19,6 +19,9 @@ export const NAME_SPOT = "bottom";
 // Frames per second of the name and year entrance (a number steps it, like
 // the earlier 18 fps test); null runs it smoothly at the screen's rate.
 export const ENTRANCE_FPS = null;
+// Each poster's median colour as the background behind it (colors.js);
+// false keeps the one plain background (--bg in the css).
+export const POSTER_BG = true;
 export const PLAY_AT = 0.45;
 export const SETTLE_MS = 120;
 export const LIST_FADE_MS = 600;

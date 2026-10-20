@@ -5,6 +5,7 @@
 
 import { GLIDE, PLAY_AT, SETTLE_MS } from "./config.js";
 import { isPhone, reduceMotion, swipes, touchQuery, waitsForFinger } from "./media.js";
+import { syncInk } from "./colors.js";
 import { setupSwipe } from "./swipe.js";
 
 const PRELOAD_AHEAD = 2;
@@ -81,7 +82,11 @@ export function setupScroll({ records, entrances, archive }) {
   function setCurrent(index) {
     if (index === current) return;
     current = index;
-    records.forEach((rec, i) => rec.item.classList.toggle("is-current", i === index));
+    records.forEach((rec, i) => {
+      rec.item.classList.toggle("is-current", i === index);
+      rec.section.classList.toggle("is-current", i === index);
+    });
+    syncInk(records[index]?.section);
     arrows?.current(index);
     for (let i = index - 1; i <= index + PRELOAD_AHEAD; i++) warm(records[i]);
   }

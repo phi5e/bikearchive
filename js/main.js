@@ -1,6 +1,7 @@
 // Entry point: builds the page and wires the modules together.
 
 import { buildArchive } from "./site/build.js";
+import { setupColors } from "./site/colors.js";
 import { createEntrance } from "./site/entrance.js";
 import { NAME_SPOT } from "./site/config.js";
 import { createLayout, sizePosters } from "./site/layout.js";
@@ -13,6 +14,7 @@ document.documentElement.classList.add(`names-${NAME_SPOT}`);
 document.documentElement.classList.toggle("is-swipe", swipes);
 const records = buildArchive(window.BIKES || [], archive, document.getElementById("bike-list-items"));
 const layout = createLayout(records);
+setupColors(records);
 const motion = !!window.gsap && !reduceMotion;
 document.documentElement.classList.toggle("has-motion", motion);
 const blurDev = document.getElementById("name-blur-dev");
