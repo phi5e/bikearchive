@@ -5,6 +5,7 @@
 // menu while that poster is the current one).
 
 import { POSTER_BG } from "./config.js";
+import { isPhone, phoneQuery } from "./media.js";
 
 // Width of the sample in px; plenty for a median, and quick to read.
 const SAMPLE = 48;
@@ -65,12 +66,26 @@ function paint(rec) {
   rec.section.classList.toggle("bike--dark", luminance(rgb) < DARK_BELOW);
   if (rec.section.classList.contains("is-current")) syncInk(rec.section);
 }
-export function setupColors(records) {
+// Read only with the page at rest (never mid-swipe), from an image that
+// is already decoded, and in a quiet moment after that. Phone posters
+// fill the screen and hide the colour, so there it isn't read at all
+// (unless the screen grows wider).
+export function setupColors(records, stage) {
   if (!POSTER_BG) return;
-  records.forEach((rec) => {
-    const img = rec.poster;
-    const later = () => idle(() => paint(rec));
-    if (img.complete && img.naturalWidth) later();
-    else img.addEventListener("load", later, { once: true });
-  });
+  function start() {
+    if (isPhone()) return;
+    records.forEach((rec) => {
+      if (rec.colored) return;
+      rec.colored = true;
+      const img = rec.poster;
+      const later = () =>
+        (img.decode?.() ?? Promise.resolve())
+          .catch(() => {})
+          .then(() => stage.atRest(() => idle(() => paint(rec))));
+      if (img.complete && img.naturalWidth) later();
+      else img.addEventListener("load", later, { once: true });
+    });
+  }
+  start();
+  phoneQuery.addEventListener("change", start);
 }

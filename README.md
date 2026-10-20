@@ -35,7 +35,7 @@ Deploy-Credits kostet.
 ## Code
 
 - `js/main.js`: Einstieg, verbindet die Module.
-- `js/site/config.js`: Schalter und Zeiten (Morph, Logo-Rollen, Bildrate des Namens (`ENTRANCE_FPS`, im Moment ohne Limit), Einrasten, Blättern am Handy: `PHONE_BROWSING`, getrennt für Safari und alle anderen Browser, Namensposition: `NAME_SPOT`).
+- `js/site/config.js`: Schalter und Zeiten (Morph, Logo-Rollen, Bildrate des Namens (`ENTRANCE_FPS`, im Moment ohne Limit), Einrasten, Blättern am Handy: `PHONE_BROWSING`, getrennt für Safari und alle anderen Browser, Namensposition: `NAME_SPOT`, Plakatfarbe als Hintergrund: `POSTER_BG`).
 - `js/site/build.js`: baut Plakate und Liste aus `js/bikes.js`.
 - `js/site/media.js`: Media Queries (Handy, reduzierte Bewegung), erkennt Safari.
 - `js/site/fit.js`: passt die Namen an die Breite an.
@@ -43,6 +43,7 @@ Deploy-Credits kostet.
 - `js/site/entrance.js`: Auftritt von Name und Jahr.
 - `js/site/scroll.js`: die Seite scrollt und rastet ein (im Wisch-Modus bewegt sich stattdessen das Plakat-Band), Vorladen, wann ein Name startet.
 - `js/site/swipe.js`: Wisch-Modus (`"swipe"` in `PHONE_BROWSING`, im Moment für alle Browser außer Safari): Wischen, Pfeile, Mausrad und Tasten blättern ein Rad weiter, die Seite selbst bewegt sich nie.
+- `js/site/colors.js`: hinter jedem Plakat seine Medianfarbe (aus dem Bild gelesen, sobald es geladen ist und die Seite ruht); auf dunklen Farben wird die Schrift weiß. Nicht am Handy, dort füllt das Bild den ganzen Bildschirm.
 - `js/site/overlays.js`: Liste, Manifesto, Lightbox.
 
 ## Räder pflegen

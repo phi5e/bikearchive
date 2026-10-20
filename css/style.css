@@ -273,7 +273,7 @@ html.is-swipe {
   color: var(--ink);
   cursor: pointer;
   touch-action: manipulation;
-  transition: opacity 0.3s var(--ease-out), color 0.4s var(--ease-out);
+  transition: opacity 0.3s var(--ease-out);
 }
 
 .swipe-arrows__button svg {
@@ -317,19 +317,15 @@ html.is-swipe {
    own name and year, and the menu, list and arrows while it is the
    current one (not over the manifesto, which keeps the plain background).
    Phone posters fill the screen and hide the colour, so there the ink
-   stays black. */
-@media (min-width: 601px) {
+   stays black. It switches at once: a fading colour would redraw the
+   menu on every frame of a swipe. */
+@media not all and (max-width: 600px) {
   .bike--dark,
   .is-dark-current:not(.is-info-open) :is(.topbar, .bike-list, .swipe-arrows) {
     --ink: #fff;
+    --line: #fff;
     color: var(--ink);
   }
-}
-
-.topbar,
-.swipe-arrows,
-.bike__caption {
-  transition: color 0.4s var(--ease-out);
 }
 
 /* The page snaps to this, not to the poster: a thin line where the poster
@@ -517,7 +513,7 @@ html.is-swipe {
   white-space: nowrap;
   text-align: left;
   transform: translate(0, -50%);
-  transition: transform var(--slide), opacity 0.25s var(--ease-out), color 0.4s var(--ease-out);
+  transition: transform var(--slide), opacity 0.25s var(--ease-out);
 }
 
 .is-list-open .list-toggle {
