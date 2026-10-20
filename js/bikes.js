@@ -2,9 +2,6 @@
    Don't edit by hand: add, rename or delete images in posters/ instead,
    named <year>_<Name_With_Underscores>.<ext>, e.g. 2018_Mash_Steel_Fixed.jpg. */
 window.BIKES = [
-  { name: "Gios Torino Super Record", year: "1983", image: "posters/1983_Gios_Torino_Super_Record.jpg" },
-  { name: "Alan Super Record", year: "1984", image: "posters/1984_Alan_Super_Record.webp" },
-  { name: "Basso Gap", year: "1985", image: "posters/1985_Basso_Gap.jpg" },
   { name: "Motobecane Mirage", year: "1987", image: "posters/1987_Motobecane_Mirage.jpg" },
   { name: "Raleigh", year: "1989", image: "posters/1989_Raleigh.jpg" },
   { name: "GT Outpost", year: "1990", image: "posters/1990_GT_Outpost.jpg" },
@@ -17,6 +14,6 @@ window.BIKES = [
   { name: "Koga Randonneur", year: "1994", image: "posters/1994_Koga_Randonneur.jpg" },
   { name: "Corratec 1001", year: "1997", image: "posters/1997_Corratec_1001.jpg" },
   { name: "Mash Steel Fixed", year: "2018", image: "posters/2018_Mash_Steel_Fixed.jpg" },
-  { name: "Astalla SS", year: "2020", image: "posters/2020_Astalla_SS.jpg" },
+  { name: "Astalla Single Speed", year: "2020", image: "posters/2020_Astalla_Single_Speed.jpg" },
   { name: "VSF Mixte", year: "2022", image: "posters/2022_VSF_Mixte.jpg" },
 ];
