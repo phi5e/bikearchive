@@ -2,6 +2,7 @@
    Don't edit by hand: add, rename or delete images in posters/ instead,
    named <year>_<Name_With_Underscores>.<ext>, e.g. 2018_Mash_Steel_Fixed.jpg. */
 window.BIKES = [
+  { name: "Bridgestone RS1000", year: "1985", image: "posters/1985_Bridgestone_RS1000.jpg" },
   { name: "Rossin Ghibli", year: "1985", image: "posters/1985_Rossin_Ghibli.jpg" },
   { name: "Motobecane Mirage", year: "1987", image: "posters/1987_Motobecane_Mirage.jpg" },
   { name: "Raleigh", year: "1989", image: "posters/1989_Raleigh.jpg" },
